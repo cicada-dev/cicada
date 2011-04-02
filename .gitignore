@@ -1,3 +1,3 @@
-**/gen/
-**/bin/
+**/gen/**
+**/bin/**
 *.DS_Store
