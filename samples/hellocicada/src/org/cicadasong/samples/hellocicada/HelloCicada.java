@@ -16,7 +16,7 @@ package org.cicadasong.samples.hellocicada;
 
 import org.cicadasong.apollo.ApolloConfig.Button;
 import org.cicadasong.apollo.ApolloIntents;
-import org.cicadasong.apollo.ApolloIntents.IdleButtonPress;
+import org.cicadasong.apollo.ApolloIntents.ButtonPress;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -26,11 +26,15 @@ import android.graphics.BitmapFactory;
 
 import com.github.cicada.samples.hellocicada.R;
 
+/**
+ * A basic class demonstrating how to use ApolloLib to control the device from the idle screen.
+ */
+
 public class HelloCicada extends BroadcastReceiver {
   @Override
   public void onReceive(Context context, Intent intent) {
     // Check that we have the right intent & button
-    IdleButtonPress event = IdleButtonPress.parseIntent(intent);
+    ButtonPress event = ButtonPress.parseIntent(intent);
     if ((event == null) || !event.hasOnlyButtonsPressed(Button.BOTTOM_RIGHT)) {
       return;  // Not yours!
     }

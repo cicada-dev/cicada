@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="org.cicadasong.cicada"
+      android:versionCode="1"
+      android:versionName="1.0">
+    <uses-sdk android:minSdkVersion="8" />
+
+    <application android:icon="@drawable/icon" android:label="@string/app_name">
+        <activity android:name=".Cicada"
+                  android:label="@string/app_name"
+                  android:configChanges="keyboardHidden|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+        <receiver android:name=".PackageMonitor">
+          <intent-filter>
+            <action android:name="android.intent.action.PACKAGE_ADDED" />
+            <action android:name="android.intent.action.PACKAGE_REMOVED" />
+            <action android:name="android.intent.action.PACKAGE_REPLACED" />
+            <data android:scheme="package" />
+          </intent-filter>
+        </receiver>
+
+        <service android:name=".CicadaService"
+                 android:label="@string/service_name" />
+        <service android:name=".AppList"
+                 android:label="@string/app_list_service_name" />
+    </application>
+
+</manifest>

@@ -26,9 +26,9 @@ public class ApolloConfig {
     TOP_RIGHT    ((byte) 1),
     MIDDLE_RIGHT ((byte) 2),
     BOTTOM_RIGHT ((byte) 4),
-    TOP_LEFT     ((byte) 16),
-    MIDDLE_LEFT  ((byte) 32),
-    BOTTOM_LEFT  ((byte) 64);
+    TOP_LEFT     ((byte) 64),
+    MIDDLE_LEFT  ((byte) 8),
+    BOTTOM_LEFT  ((byte) 32);
     
     private final byte value;
     

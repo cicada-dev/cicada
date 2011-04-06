@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Welcome to Cicada!</string>
+    <string name="app_name">Cicada</string>
+    <string name="service_name">Cicada Service</string>
+    <string name="starting">Starting Cicada Service...</string>
+    <string name="running">Cicada Service is Running.</string>
+    
+    <string name="menu_label_stop_service">Stop Service</string>
+    
+    <string name="app_list_service_name">Cicada App List</string>
+</resources>
