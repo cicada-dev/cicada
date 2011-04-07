@@ -46,8 +46,8 @@ public class CicadaIntents {
     MIDDLE_RIGHT ((byte) 2),
     BOTTOM_RIGHT ((byte) 4),
     TOP_LEFT     ((byte) 64),
-    MIDDLE_LEFT  ((byte) 8),
-    BOTTOM_LEFT  ((byte) 32);
+    MIDDLE_LEFT  ((byte) 32),
+    BOTTOM_LEFT  ((byte) 8);
     
     private final byte value;
     
