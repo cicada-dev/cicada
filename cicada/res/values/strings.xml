@@ -9,4 +9,15 @@
     <string name="menu_label_stop_service">Stop Service</string>
     
     <string name="app_list_service_name">Cicada App List</string>
+    
+    <string name="welcome_on_screen">Welcome\nto Cicada</string>
+    <string name="waiting_for_idle_screen">Waiting for\nidle screen\nto update...</string>
+    
+    <!-- Widget Setup -->
+    <string name="widget_setup">Widget Setup</string>
+    <string name="menu_label_widget_setup">Widget Setup</string>
+    <string name="label_top_widget">Top Widget</string>
+    <string name="label_middle_widget">Middle Widget</string>
+    <string name="label_bottom_widget">Bottom Widget</string>
+    <string name="no_widgets_set_up">No widgets setup yet!\n\nUse the Cicada phone app to\nset them up.</string>
 </resources>

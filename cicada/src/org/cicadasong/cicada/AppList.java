@@ -55,6 +55,7 @@ public class AppList extends CicadaApp {
     apps = db.getApps();
     db.close();
     apps.add(0, CicadaService.IDLE_SCREEN);
+    apps.add(1, WidgetScreen.DESCRIPTION);
   }
 
   @Override

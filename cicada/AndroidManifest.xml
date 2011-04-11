@@ -15,6 +15,11 @@
             </intent-filter>
         </activity>
         
+        <activity android:name=".WidgetSetup"
+                  android:label="@string/widget_setup"
+                  android:configChanges="keyboardHidden|orientation">
+        </activity>
+
         <receiver android:name=".PackageMonitor">
           <intent-filter>
             <action android:name="android.intent.action.PACKAGE_ADDED" />

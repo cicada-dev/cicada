@@ -125,7 +125,7 @@ public abstract class CicadaApp extends Service {
       activate(mode);
     } else if (intent.getAction().equals(CicadaIntents.INTENT_DEACTIVATE_APP)) {
       CicadaApp.this.deactivate();
-    } else if (intent.getAction().equals(CicadaIntents.INTENT_BUTTON_EVENT)) {
+    } else if (intent.getAction().equals(CicadaIntents.INTENT_BUTTON_EVENT) && isActive) {
       ButtonEvent event = CicadaIntents.ButtonEvent.parseIntent(intent);
       if (event != null) {
         onButtonPress(event);
@@ -194,6 +194,10 @@ public abstract class CicadaApp extends Service {
   
   private void activate(AppType mode) {
     isActive = true;
+    if (currentMode != mode) {
+      // Make sure the canvas is reset to the correct size when changing mode.
+      canvas = null;
+    }
     currentMode = mode;
     onActivate(mode);
   }

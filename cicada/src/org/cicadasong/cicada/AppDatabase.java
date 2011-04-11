@@ -28,11 +28,20 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class AppDatabase {
   private static final String DATABASE_NAME = "cicada.db";
   private static final int DATABASE_VERSION = 1;
-  private static final String TABLE_NAME = "apps";
+  private static final String APPS_TABLE_NAME = "apps";
+  private static final String WIDGET_SETUP_TABLE_NAME = "widget_setup";
   private static final String APP_NAME = "name";
   private static final String PACKAGE_NAME = "package_name";
   private static final String CLASS_NAME = "class_name";
   private static final String APP_TYPE = "app_type";
+  private static final String COL_WIDGET_INDEX = "widget_index";
+  
+  private static final String WHERE_WIDGET = String.format("%s = %d OR %s = %d",
+      APP_TYPE, AppType.WIDGET.ordinal(), APP_TYPE, AppType.WIDGET_AND_APP.ordinal());
+  private static final String WHERE_APP = String.format("%s = %d OR %s = %d",
+          APP_TYPE, AppType.APP.ordinal(), APP_TYPE, AppType.WIDGET_AND_APP.ordinal());
+  
+  private static final int NUM_WIDGETS_ON_SCREEN = 3;
   
   private SQLiteDatabase db;
   
@@ -50,22 +59,30 @@ public class AppDatabase {
     values.put(PACKAGE_NAME, app.packageName);
     values.put(CLASS_NAME, app.className);
     values.put(APP_TYPE, app.modes.ordinal());
-    db.insert(TABLE_NAME, null, values);
+    db.insert(APPS_TABLE_NAME, null, values);
   }
   
   public void deleteAppsWithPackageName(String packageName) {
-    db.delete(TABLE_NAME, PACKAGE_NAME + "=\"" + packageName + "\"", null);
+    db.delete(APPS_TABLE_NAME, PACKAGE_NAME + "=\"" + packageName + "\"", null);
   }
   
   public List<AppDescription> getApps() {
+    return getApps(WHERE_APP);
+  }
+  
+  public List<AppDescription> getWidgets() {
+    return getApps(WHERE_WIDGET);
+  }
+  
+  private List<AppDescription> getApps(String whereClause) {
     ArrayList<AppDescription> apps = new ArrayList<AppDescription>();
     
-    Cursor cursor = db.query(TABLE_NAME, new String[] {
+    Cursor cursor = db.query(APPS_TABLE_NAME, new String[] {
             PACKAGE_NAME,
             CLASS_NAME,
             APP_NAME, 
                 APP_TYPE}, 
-                null, 
+                whereClause, 
                 null, 
                 null, 
                 null, 
@@ -85,6 +102,54 @@ public class AppDatabase {
     return apps;
   }
   
+  public List<AppDescription> getWidgetSetup() {
+    ArrayList<AppDescription> widgets = new ArrayList<AppDescription>(NUM_WIDGETS_ON_SCREEN);
+    for (int i = 0; i < NUM_WIDGETS_ON_SCREEN; i++) {
+      widgets.add(null);
+    }
+    
+    Cursor cursor = db.query(WIDGET_SETUP_TABLE_NAME,
+        new String[] { PACKAGE_NAME, CLASS_NAME, APP_NAME, APP_TYPE, COL_WIDGET_INDEX }, 
+        null, 
+        null, 
+        null, 
+        null, 
+        COL_WIDGET_INDEX + " ASC");
+    if (cursor.moveToFirst()) {
+      do {
+        AppType type = AppType.values()[cursor.getInt(3)];
+        AppDescription app =
+            new AppDescription(cursor.getString(0), cursor.getString(1), cursor.getString(2), type);
+        widgets.set(cursor.getInt(4), app);
+      } while (cursor.moveToNext());
+    }
+    if (cursor != null & !cursor.isClosed()) {
+      cursor.close();
+    }
+    
+    return widgets;
+  }
+  
+  public void setWidgetSetup(List<AppDescription> widgets) {
+    // Clear out the old values
+    db.delete(WIDGET_SETUP_TABLE_NAME, null, null);
+    
+    for (int i = 0; i < widgets.size(); i++) {
+      AppDescription app = widgets.get(i);
+      if (app == null) {
+        continue;
+      }
+
+      ContentValues values = new ContentValues();
+      values.put(APP_NAME, app.appName);
+      values.put(PACKAGE_NAME, app.packageName);
+      values.put(CLASS_NAME, app.className);
+      values.put(APP_TYPE, app.modes.ordinal());
+      values.put(COL_WIDGET_INDEX, i);
+      db.insert(WIDGET_SETUP_TABLE_NAME, null, values);
+    }
+  }
+
   public static class AppDatabaseHelper extends SQLiteOpenHelper {
 
     AppDatabaseHelper(Context context) {
@@ -93,8 +158,12 @@ public class AppDatabase {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-      db.execSQL("CREATE TABLE " + TABLE_NAME +
+      db.execSQL("CREATE TABLE " + APPS_TABLE_NAME +
           "(id INTEGER PRIMARY KEY AUTOINCREMENT, " + APP_NAME + " TEXT, " +
+          PACKAGE_NAME + " TEXT, " + CLASS_NAME + " TEXT, " + APP_TYPE + " INTEGER)");
+      
+      db.execSQL("CREATE TABLE " + WIDGET_SETUP_TABLE_NAME +
+          "(" + COL_WIDGET_INDEX + " INTEGER PRIMARY KEY, " + APP_NAME + " TEXT, " +
           PACKAGE_NAME + " TEXT, " + CLASS_NAME + " TEXT, " + APP_TYPE + " INTEGER)");
     }
 

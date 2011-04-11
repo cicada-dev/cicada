@@ -53,12 +53,22 @@ public class Cicada extends Activity {
   public boolean onOptionsItemSelected(MenuItem item) {
     // Handle item selection
     switch (item.getItemId()) {
+    
     case R.id.menu_item_stop_service:
       stopService(new Intent(getBaseContext(), CicadaService.class));
+      return true;
+      
+    case R.id.menu_item_widget_setup:
+      launchWidgetSetup();
       return true;
 
     default:
       return super.onOptionsItemSelected(item);
     }
+  }
+  
+  private void launchWidgetSetup() {
+    Intent intent = new Intent(getBaseContext(), WidgetSetup.class);
+    startActivity(intent);
   }
 }

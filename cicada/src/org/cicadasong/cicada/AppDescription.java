@@ -32,4 +32,8 @@ public class AppDescription {
     this.appName = appName;
     this.modes = modes;
   }
+  
+  public String toString() {
+    return appName;
+  }
 }

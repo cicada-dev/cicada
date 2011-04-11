@@ -43,6 +43,7 @@ public class CicadaService extends Service {
   private AppDescription appList;
   private AppDescription activeApp;
   private int sessionId = 1;
+  private WidgetScreen widgetScreen = new WidgetScreen();
 
   @Override
   public IBinder onBind(Intent intent) {
@@ -72,7 +73,10 @@ public class CicadaService extends Service {
         if (intent.getAction().equals(CicadaIntents.INTENT_PUSH_CANVAS)) {
           byte[] buffer = intent.getByteArrayExtra(CicadaIntents.EXTRA_BUFFER);
           int senderSessionId = intent.getIntExtra(CicadaIntents.EXTRA_SESSION_ID, 0);
-          if (senderSessionId != sessionId) {
+          
+          if (widgetScreen.hasSessionId(senderSessionId)) {
+            buffer = widgetScreen.updateScreenBuffer(buffer, senderSessionId);
+          } else if (senderSessionId != sessionId) {
             Log.e(Cicada.TAG, "App tried to push screen using expired sessionId " + senderSessionId
                 + " -- the current sessionId is " + sessionId);
             return;
@@ -104,7 +108,7 @@ public class CicadaService extends Service {
           if (buttonPress != null) {
             if (buttonPress.hasOnlyButtonsPressed(ApolloConfig.Button.TOP_LEFT)) {
               switchToApp(appList);
-            } else {
+            } else if (!activeApp.className.equals(WidgetScreen.DESCRIPTION.className)) {
               CicadaIntents.ButtonEvent.sendIntent(getApplicationContext(),
                   intent.getByteExtra(ApolloIntents.EXTRA_BUTTONS, (byte) 0));
             }
@@ -143,7 +147,7 @@ public class CicadaService extends Service {
     }
     
     ApolloIntents.setApplicationMode(this, true);
-    ApolloIntents.pushText(this, "Welcome\nto Cicada");
+    ApolloIntents.pushText(this, getResources().getString(R.string.welcome_on_screen));
     ApolloIntents.vibrate(this, 300, 0, 1);
     
     return super.onStartCommand(intent, flags, startId);
@@ -180,30 +184,78 @@ public class CicadaService extends Service {
     Log.v(Cicada.TAG, "Activating app: " + app.appName);
     activeApp = app;
     
-    if (IDLE_SCREEN.appName.equals(app.appName)) {
+    if (IDLE_SCREEN.className.equals(app.className)) {
       Log.v(Cicada.TAG, "Switching to idle screen...");
-      ApolloIntents.pushText(this, "Waiting for\nidle screen\nto update...");
+      ApolloIntents.pushText(this, getResources().getString(R.string.waiting_for_idle_screen));
       ApolloIntents.setApplicationMode(this, false);
+      return;
+    } else if (WidgetScreen.DESCRIPTION.className.equals(app.className)) {
+      activateWidgets();
       return;
     }
     
-    Intent serviceIntent = new Intent();
-    serviceIntent.setComponent(new ComponentName(app.packageName, app.className));
-    serviceIntent.setAction(CicadaIntents.INTENT_ACTIVATE_APP);
-    serviceIntent.putExtra(CicadaIntents.EXTRA_SESSION_ID, sessionId);
-    serviceIntent.putExtra(CicadaIntents.EXTRA_APP_MODE, mode.name());
-    startService(serviceIntent);
+    sendActivationIntent(app, sessionId, AppType.APP);
   }
   
   private void deactivateApp(AppDescription app) {
     Log.v(Cicada.TAG, "Dectivating app: " + app.appName);
     activeApp = null;
 
-    if (IDLE_SCREEN.appName.equals(app.appName)) {
+    if (IDLE_SCREEN.className.equals(app.className)) {
       ApolloIntents.setApplicationMode(this, true);
+      return;
+    } else if (WidgetScreen.DESCRIPTION.className.equals(app.className)) {
+      deactivateWidgets();
       return;
     }
     
+    sendDeactivationIntent(app);
+  }
+
+  private void activateWidgets() {
+    AppDatabase db = new AppDatabase(this);
+    widgetScreen.widgets = db.getWidgetSetup().toArray(new AppDescription[]{});
+    db.close();
+    
+    widgetScreen.clearBuffer();
+    boolean hasWidgets = false;
+    
+    for (int i = 0; i < widgetScreen.widgets.length; i++) {
+      AppDescription app = widgetScreen.widgets[i];
+      if (app != null) {
+        hasWidgets = true;
+        widgetScreen.putSessionId(i, sessionId);
+        sendActivationIntent(app, sessionId, AppType.WIDGET);
+        incrementSessionId();
+      }
+    }
+    
+    if (!hasWidgets) {
+      ApolloIntents.pushText(this, getResources().getString(R.string.no_widgets_set_up));
+    }
+  }
+  
+  private void deactivateWidgets() {
+    for (int i = 0; i < widgetScreen.widgets.length; i++) {
+      AppDescription app = widgetScreen.widgets[i];
+      if (app != null) {
+        sendDeactivationIntent(app);
+      }
+    }
+    
+    widgetScreen.clearSessionIds();
+  }
+
+  private void sendActivationIntent(AppDescription app, int appSessionId, AppType mode) {
+    Intent serviceIntent = new Intent();
+    serviceIntent.setComponent(new ComponentName(app.packageName, app.className));
+    serviceIntent.setAction(CicadaIntents.INTENT_ACTIVATE_APP);
+    serviceIntent.putExtra(CicadaIntents.EXTRA_SESSION_ID, appSessionId);
+    serviceIntent.putExtra(CicadaIntents.EXTRA_APP_MODE, mode.name());
+    startService(serviceIntent);
+  }
+  
+  private void sendDeactivationIntent(AppDescription app) {
     Intent serviceIntent = new Intent();
     serviceIntent.setComponent(new ComponentName(app.packageName, app.className));
     serviceIntent.setAction(CicadaIntents.INTENT_DEACTIVATE_APP);
