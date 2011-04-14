@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="org.cicadasong.samples.quicktext"
+      android:versionCode="1"
+      android:versionName="1.0">
+    <uses-sdk android:minSdkVersion="5" />
+
+    <uses-permission android:name="android.permission.SEND_SMS" />
+
+    <application android:icon="@drawable/icon" android:label="@string/app_name">
+        <service android:name=".QuickText"
+                 android:label="@string/app_name"
+                 android:exported="true">
+            <meta-data android:name="org.cicadasong.cicada.apptype"
+                       android:value="APP" />
+        </service>
+        
+        <activity android:name=".QuickTextSetup"
+                  android:label="@string/setup_name"
+                  android:configChanges="keyboardHidden|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
