@@ -1,1 +1,6 @@
+# Android non-source files for project subdirectories
+bin/
+gen/
+
+# Mac OS X Crap
 *.DS_Store
