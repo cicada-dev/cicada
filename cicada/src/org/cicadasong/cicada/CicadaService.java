@@ -36,6 +36,8 @@ import android.util.Log;
 
 public class CicadaService extends Service {
   public static final String INTENT_LAUNCH_APP = "org.cicadasong.cicada.LAUNCH_APP";
+  public static final String INTENT_SERVICE_STARTED = "org.cicadasong.cicada.SERVICE_STARTED";
+  public static final String INTENT_SERVICE_STOPPED = "org.cicadasong.cicada.SERVICE_STOPPED";
   public static final String EXTRA_APP_PACKAGE = "app_package";
   public static final String EXTRA_APP_CLASS = "app_class";
   public static final String EXTRA_APP_NAME = "app_name";
@@ -49,7 +51,8 @@ public class CicadaService extends Service {
   private AppConnection activeConnection;
   private int sessionId = 1;
   private WidgetScreen widgetScreen = new WidgetScreen();
-
+  private static boolean isRunning = false;
+  
   @Override
   public IBinder onBind(Intent intent) {
     // TODO Auto-generated method stub
@@ -68,9 +71,16 @@ public class CicadaService extends Service {
     receiver = createBroadcastReceiver();
     registerReceiver(receiver, filter);
     
+    Log.v(Cicada.TAG, "Cicada Service Started");
+    isRunning = true;
+    sendBroadcast(new Intent(INTENT_SERVICE_STARTED));
+
     super.onCreate();
   }
   
+  public static boolean isRunning() {
+    return isRunning;
+  }
 
   private BroadcastReceiver createBroadcastReceiver() {
     return new BroadcastReceiver() {
@@ -133,8 +143,6 @@ public class CicadaService extends Service {
 
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
-    Log.v(Cicada.TAG, "Cicada Service Started");
-    
     if (activeApp != null) {
       deactivateApp(activeApp);
     }
@@ -171,6 +179,9 @@ public class CicadaService extends Service {
     
     unregisterReceiver(receiver);
     ApolloIntents.setApplicationMode(this, false);
+    
+    isRunning = false;
+    sendBroadcast(new Intent(INTENT_SERVICE_STOPPED));
     
     super.onDestroy();
   }

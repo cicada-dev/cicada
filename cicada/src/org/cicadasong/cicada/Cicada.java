@@ -15,31 +15,86 @@
 package org.cicadasong.cicada;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.ToggleButton;
 
 public class Cicada extends Activity {
   public static final String TAG = Cicada.class.getSimpleName();
     
+  private BroadcastReceiver receiver;
+  private ToggleButton serviceToggle;
+  
   /** Called when the activity is first created. */
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
+    
+    serviceToggle = (ToggleButton) findViewById(R.id.service_toggle);
+    serviceToggle.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+      @Override
+      public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        if (isChecked) {
+          startService(new Intent(getBaseContext(), CicadaService.class));
+        } else {
+          stopService(new Intent(getBaseContext(), CicadaService.class));
+        }
+      }
+    });
+    updateServiceToggleState();
+    
+    startService(new Intent(getBaseContext(), CicadaService.class));
   }
 
   @Override
   protected void onPause() {
     super.onPause();
+    
+    tearDownBroadcastReceiver();
   }
 
   @Override
   protected void onResume() {
-    startService(new Intent(getBaseContext(), CicadaService.class));
     super.onResume();
+    
+    setUpBroadcastReceiver();
+  }
+  
+  private void updateServiceToggleState() {
+    serviceToggle.setChecked(CicadaService.isRunning());
+  }
+  
+  private void setUpBroadcastReceiver() {
+    IntentFilter filter = new IntentFilter();
+    filter.addAction(CicadaService.INTENT_SERVICE_STARTED);
+    filter.addAction(CicadaService.INTENT_SERVICE_STOPPED);
+    
+    receiver = new BroadcastReceiver() {
+      @Override
+      public void onReceive(Context context, Intent intent) {
+        Log.v(Cicada.TAG, "Received intent: " + intent);
+        updateServiceToggleState();
+      }
+    };
+
+    registerReceiver(receiver, filter);
+  }
+  
+  private void tearDownBroadcastReceiver() {
+    if (receiver != null) {
+      unregisterReceiver(receiver);
+      receiver = null;
+    }
   }
   
   @Override
