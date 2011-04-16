@@ -28,6 +28,8 @@ public class WidgetScreen {
   private byte[] screenBuffer = new byte[96 * 96 / 8];
   private int[] sessionIds = new int[3];
   public AppDescription widgets[] = new AppDescription[] { null, null, null };
+  public CicadaService.AppConnection widgetConnections[] =
+      new CicadaService.AppConnection[] { null, null, null };
   
   public void putSessionId(int index, int id) {
     sessionIds[index] = id;

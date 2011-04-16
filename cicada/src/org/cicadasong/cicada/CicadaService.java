@@ -165,7 +165,9 @@ public class CicadaService extends Service {
   public void onDestroy() {
     Log.v(Cicada.TAG, "Cicada Service Destroyed");
     
-    deactivateApp(activeApp);
+    if (activeApp != null) {
+      deactivateApp(activeApp);
+    }
     
     unregisterReceiver(receiver);
     ApolloIntents.setApplicationMode(this, false);
@@ -240,7 +242,9 @@ public class CicadaService extends Service {
       if (app != null) {
         hasWidgets = true;
         widgetScreen.putSessionId(i, sessionId);
-        sendActivationIntent(app, sessionId, AppType.WIDGET);
+        AppConnection connection = new AppConnection(app, sessionId, AppType.WIDGET);
+        widgetScreen.widgetConnections[i] = connection;
+        connection.connect();
         incrementSessionId();
       }
     }
@@ -252,29 +256,15 @@ public class CicadaService extends Service {
   
   private void deactivateWidgets() {
     for (int i = 0; i < widgetScreen.widgets.length; i++) {
-      AppDescription app = widgetScreen.widgets[i];
-      if (app != null) {
-        sendDeactivationIntent(app);
+      AppConnection connection = widgetScreen.widgetConnections[i];
+      if (connection != null) {
+        connection.deactivateApp();
+        connection.disconnect();
+        widgetScreen.widgetConnections[i] = null;
       }
     }
     
     widgetScreen.clearSessionIds();
-  }
-  
-  private void sendActivationIntent(AppDescription app, int appSessionId, AppType mode) {
-    Intent serviceIntent = new Intent();
-    serviceIntent.setComponent(new ComponentName(app.packageName, app.className));
-    serviceIntent.setAction(CicadaIntents.INTENT_ACTIVATE_APP);
-    serviceIntent.putExtra(CicadaIntents.EXTRA_SESSION_ID, appSessionId);
-    serviceIntent.putExtra(CicadaIntents.EXTRA_APP_MODE, mode.name());
-    startService(serviceIntent);
-  }
-  
-  private void sendDeactivationIntent(AppDescription app) {
-    Intent serviceIntent = new Intent();
-    serviceIntent.setComponent(new ComponentName(app.packageName, app.className));
-    serviceIntent.setAction(CicadaIntents.INTENT_DEACTIVATE_APP);
-    stopService(serviceIntent);
   }
   
   private void appDisconnectedUnexpectedly(AppConnection connection) {
@@ -288,7 +278,7 @@ public class CicadaService extends Service {
     }
   }
 
-  private class AppConnection implements ServiceConnection {
+  public class AppConnection implements ServiceConnection {
     private boolean connected;
     private boolean requestedDisconnect;
     private Messenger messenger;
@@ -329,10 +319,6 @@ public class CicadaService extends Service {
     public void disconnect() {
       requestedDisconnect = true;
       unbindService(this);
-    }
-    
-    public boolean isConnected() {
-      return connected;
     }
     
     public AppDescription getApp() {

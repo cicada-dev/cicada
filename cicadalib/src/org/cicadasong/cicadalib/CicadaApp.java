@@ -19,10 +19,7 @@ import org.cicadasong.apollo.BitmapUtil;
 import org.cicadasong.cicadalib.CicadaIntents.ButtonEvent;
 
 import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -52,36 +49,16 @@ public abstract class CicadaApp extends Service {
   private Bitmap bitmap;
   private Canvas canvas;
   private boolean isActive = false;
-  private BroadcastReceiver receiver;
   private int sessionId;
 
   // The messenger for communication with CicadaService.
   final Messenger messenger = new Messenger(new IncomingHandler());
 
   @Override
-  public void onCreate() {
-    receiver = new BroadcastReceiver() {
-      @Override
-      public void onReceive(Context context, Intent intent) {
-        handleIntent(intent);
-      }
-    };
-    
-    IntentFilter filter = new IntentFilter();
-    filter.addAction(CicadaIntents.INTENT_ACTIVATE_APP);
-    filter.addAction(CicadaIntents.INTENT_DEACTIVATE_APP);
-    filter.addAction(CicadaIntents.INTENT_BUTTON_EVENT);
-    registerReceiver(receiver, filter);
-    
-    super.onCreate();
-  }
-
-  @Override
   public void onDestroy() {
     if (isActive) {
       deactivate();
     }
-    unregisterReceiver(receiver);
     super.onDestroy();
   }
   
@@ -123,12 +100,6 @@ public abstract class CicadaApp extends Service {
     return messenger.getBinder();
   }
   
-  @Override
-  public int onStartCommand(Intent intent, int flags, int startId) {
-    handleIntent(intent);
-    return super.onStartCommand(intent, flags, startId);
-  }
-
   /**
    * @return the human-readable name of the app (only used for debugging at the moment)
    */
@@ -170,25 +141,6 @@ public abstract class CicadaApp extends Service {
   
   protected AppType getCurrentMode() {
     return currentMode;
-  }
-  
-  private void handleIntent(Intent intent) {
-    if (intent.getAction().equals(CicadaIntents.INTENT_ACTIVATE_APP)) {
-      AppType mode = AppType.APP;
-      String modeString = intent.getStringExtra(CicadaIntents.EXTRA_APP_MODE);
-      sessionId = intent.getIntExtra(CicadaIntents.EXTRA_SESSION_ID, 0);
-      if (modeString != null) {
-        mode = AppType.valueOf(modeString);
-      }
-      activate(mode);
-    } else if (intent.getAction().equals(CicadaIntents.INTENT_DEACTIVATE_APP)) {
-      CicadaApp.this.deactivate();
-    } else if (intent.getAction().equals(CicadaIntents.INTENT_BUTTON_EVENT) && isActive) {
-      ButtonEvent event = CicadaIntents.ButtonEvent.parseIntent(intent);
-      if (event != null) {
-        onButtonPress(event);
-      }
-    }
   }
   
   private Canvas getCanvas() {
