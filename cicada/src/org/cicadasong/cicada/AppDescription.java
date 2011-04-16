@@ -16,6 +16,8 @@ package org.cicadasong.cicada;
 
 import org.cicadasong.cicadalib.CicadaApp.AppType;
 
+import android.content.ComponentName;
+
 /**
  * Class used by Cicada to keep track of launchable apps.
  */
@@ -35,6 +37,10 @@ public class AppDescription {
   
   public String toString() {
     return appName;
+  }
+  
+  public ComponentName getComponentName() {
+    return new ComponentName(packageName, className);
   }
 
   @Override
