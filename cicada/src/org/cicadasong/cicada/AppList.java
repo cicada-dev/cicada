@@ -28,6 +28,11 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 
 public class AppList extends CicadaApp {
+  public static final AppDescription DESCRIPTION = new AppDescription(
+    AppList.class.getPackage().getName(),
+    AppList.class.getName(),
+    "App List",
+    AppType.APP);
   
   private List<AppDescription> apps;
   private int selectedIndex;

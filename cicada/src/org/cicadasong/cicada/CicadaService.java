@@ -40,7 +40,6 @@ public class CicadaService extends Service {
       new AppDescription("IDLE_SCREEN", "IDLE_SCREEN", "Idle Screen", AppType.APP);
   
   private BroadcastReceiver receiver;
-  private AppDescription appList;
   private AppDescription activeApp;
   private int sessionId = 1;
   private WidgetScreen widgetScreen = new WidgetScreen();
@@ -60,13 +59,14 @@ public class CicadaService extends Service {
     filter.addAction(ApolloIntents.INTENT_APP_BUTTON_PRESS);
     filter.addAction(INTENT_LAUNCH_APP);
     
-    appList = new AppDescription(
-        getPackageName(),
-        AppList.class.getName(),
-        "App List",
-        AppType.APP);
+    receiver = createBroadcastReceiver();
+    registerReceiver(receiver, filter);
     
-    receiver = new BroadcastReceiver() {
+    super.onCreate();
+  }
+
+  private BroadcastReceiver createBroadcastReceiver() {
+    return new BroadcastReceiver() {
       @Override
       public void onReceive(Context context, Intent intent) {
         Log.v(Cicada.TAG, "Received intent: " + intent);
@@ -107,7 +107,7 @@ public class CicadaService extends Service {
           ButtonPress buttonPress = ApolloIntents.ButtonPress.parseIntent(intent);
           if (buttonPress != null) {
             if (buttonPress.hasOnlyButtonsPressed(ApolloConfig.Button.TOP_LEFT)) {
-              switchToApp(appList);
+              switchToApp(AppList.DESCRIPTION);
             } else if (!activeApp.className.equals(WidgetScreen.DESCRIPTION.className)) {
               CicadaIntents.ButtonEvent.sendIntent(getApplicationContext(),
                   intent.getByteExtra(ApolloIntents.EXTRA_BUTTONS, (byte) 0));
@@ -122,14 +122,15 @@ public class CicadaService extends Service {
         }
       }
     };
-    registerReceiver(receiver, filter);
-    
-    super.onCreate();
   }
 
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
     Log.v(Cicada.TAG, "Cicada Service Started");
+    
+    if (activeApp != null) {
+      deactivateApp(activeApp);
+    }
     
     if (!PrefUtil.getAppScanCompleted(this)) {
       Log.v(Cicada.TAG, "Scanning for Cicada apps...");
@@ -138,12 +139,12 @@ public class CicadaService extends Service {
         public void scanFinished() {
           Log.v(Cicada.TAG, "App scan complete");
           PrefUtil.setAppScanCompleted(CicadaService.this, true);
-          activateApp(appList, AppType.APP);
+          switchToApp(AppList.DESCRIPTION);
         }
       });
       scanner.execute((Void) null);
     } else {
-      activateApp(appList, AppType.APP);
+      switchToApp(AppList.DESCRIPTION);
     }
     
     ApolloIntents.setApplicationMode(this, true);
