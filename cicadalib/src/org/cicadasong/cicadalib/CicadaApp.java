@@ -93,7 +93,7 @@ public abstract class CicadaApp extends Service {
 
   /**
    * Called when this app is activated by CicadaService.  onDraw() will be triggered at the
-   * conlusion of this method.
+   * conclusion of this method.
    * 
    * @param mode the mode that the app is being activated in
    */
