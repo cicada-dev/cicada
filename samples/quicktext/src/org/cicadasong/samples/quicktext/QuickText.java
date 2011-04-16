@@ -26,7 +26,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.telephony.SmsManager;
@@ -92,7 +91,7 @@ public class QuickText extends CicadaApp {
           break;
         }
         state = State.GOT_SEND_RESULT;
-        draw();
+        invalidate();
       }
     };
     registerReceiver(smsIntentReceiver, new IntentFilter(ACTION_SMS_SENT));
@@ -130,7 +129,7 @@ public class QuickText extends CicadaApp {
     PendingIntent sentIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_SMS_SENT), 0);
     manager.sendTextMessage(number, null, message, sentIntent, null);
     state = State.SENDING;
-    draw();
+    invalidate();
   }
   
   private void launchSetup() {
@@ -153,14 +152,10 @@ public class QuickText extends CicadaApp {
     } else {
       state = State.NEED_CONFIGURATION;
     }
-    draw();
+    invalidate();
   }
   
-  private void draw() {
-    Canvas canvas = getCanvas();
-    
-    canvas.drawColor(Color.WHITE);
-
+  protected void onDraw(Canvas canvas) {
     Paint paint = new Paint();
     paint.setTypeface(Typeface.DEFAULT);
     paint.setTextSize(12);
@@ -191,8 +186,6 @@ public class QuickText extends CicadaApp {
     } else if (state == State.NEED_CONFIGURATION) {
       canvas.drawText("SETUP >>", x, y, paint);
     }
-    
-    pushCanvas();
   }
 
 }

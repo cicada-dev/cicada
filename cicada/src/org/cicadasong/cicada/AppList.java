@@ -46,8 +46,6 @@ public class AppList extends CicadaApp {
     if (apps == null) {
       loadApps();
     }
-    
-    draw();
   }
   
   private void loadApps() {
@@ -66,10 +64,10 @@ public class AppList extends CicadaApp {
   public void onButtonPress(ButtonEvent buttonEvent) {
     if (buttonEvent.hasOnlyButtonsPressed(CicadaIntents.Button.TOP_RIGHT)) {
       selectedIndex = Math.max(0, selectedIndex - 1);
-      draw();
+      invalidate();
     } else if (buttonEvent.hasOnlyButtonsPressed(CicadaIntents.Button.BOTTOM_RIGHT)) {
       selectedIndex = Math.min(apps.size() - 1, selectedIndex + 1);
-      draw();
+      invalidate();
     } else if (buttonEvent.hasOnlyButtonsPressed(CicadaIntents.Button.MIDDLE_RIGHT)) {
       launchSelectedApp();
     }
@@ -85,10 +83,7 @@ public class AppList extends CicadaApp {
     sendBroadcast(intent);
   }
   
-  private void draw() {
-    Canvas canvas = getCanvas();
-      
-    canvas.drawColor(Color.WHITE);
+  protected void onDraw(Canvas canvas) {
     float y = -paint.ascent();
 
     int startIndex = Math.max(0, selectedIndex - 2);
@@ -102,8 +97,6 @@ public class AppList extends CicadaApp {
       canvas.drawText(apps.get(i).appName, 0, y, paint);
       y += paint.getFontSpacing();
     }
-    
-    pushCanvas();
   }
 
 }

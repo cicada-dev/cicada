@@ -19,7 +19,6 @@ import org.cicadasong.cicadalib.CicadaIntents.Button;
 import org.cicadasong.cicadalib.CicadaIntents.ButtonEvent;
 
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.os.Handler;
@@ -61,7 +60,7 @@ public class DigitalClock extends CicadaApp {
         public void run() {
           if (!DigitalClock.this.isActive()) return;
           
-          draw();
+          invalidate();
           handler.postDelayed(this, TIME_UPDATE_INTERVAL_MSEC);
         }
       };
@@ -83,21 +82,17 @@ public class DigitalClock extends CicadaApp {
   public void onButtonPress(ButtonEvent buttons) {
     if (buttons.hasOnlyButtonsPressed(Button.MIDDLE_RIGHT)) {
       is24Hour = !is24Hour;  // Simple time format toggle to demonstrate button handling.
-      draw();  // Don't forget to redraw after a button event that changes the app state!
+      invalidate();  // Don't forget to redraw after a button event that changes the app state!
       vibrate(200, 0, 1);  // Just to demonstrate vibration
     }
   }
   
-  private void draw() {
-    Canvas canvas = getCanvas();
-    canvas.drawColor(Color.WHITE);
+  protected void onDraw(Canvas canvas) {
     int x = canvas.getWidth() / 2;
     int y = (int) (canvas.getHeight() - paint.ascent()) / 2;
     
     time.set(System.currentTimeMillis());
     canvas.drawText(time.format(is24Hour ? FORMAT_24 : FORMAT_12), x, y, paint);
-    
-    pushCanvas();
   }
 
 }

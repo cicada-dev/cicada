@@ -25,6 +25,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.os.IBinder;
 
 /**
@@ -91,15 +92,16 @@ public abstract class CicadaApp extends Service {
   }
 
   /**
-   * Called when this app is activated by CicadaService, and is free to pushCanvas()
-   * updates to the device.
+   * Called when this app is activated by CicadaService.  onDraw() will be triggered at the
+   * conlusion of this method.
    * 
    * @param mode the mode that the app is being activated in
    */
   public abstract void onActivate(AppType mode);
   
   /**
-   * Called when this app is deactivated; it should no longer attempt to pushCanvas().
+   * Called when this app is deactivated; it should no longer call invalidate() to trigger screen
+   * updates past this point.
    */
   public abstract void onDeactivate();
   
@@ -109,6 +111,17 @@ public abstract class CicadaApp extends Service {
    * @param buttonEvent indicates the buttons that were pressed.
    */
   public abstract void onButtonPress(ButtonEvent buttonEvent);
+  
+  /**
+   * Called when the app needs to render its screen contents.  This method should not be called
+   * directly by the app; if the app author wishes to trigger a screen update, they should call
+   * invalidate().
+   * 
+   * @param canvas the canvas on which the display contents will be drawn.  Note that the canvas
+   *        will be different sizes in widget and app modes, and that the contents of the canvas
+   *        will be flattened to monochrome before being pushed to the display.
+   */
+  protected abstract void onDraw(Canvas canvas);
   
   protected AppType getCurrentMode() {
     return currentMode;
@@ -133,7 +146,7 @@ public abstract class CicadaApp extends Service {
     }
   }
   
-  protected Canvas getCanvas() {
+  private Canvas getCanvas() {
     if (canvas == null) {
       int height = ApolloConfig.DISPLAY_HEIGHT;
       if (getCurrentMode() == AppType.WIDGET) {
@@ -152,12 +165,8 @@ public abstract class CicadaApp extends Service {
    * to monochrome for display on the device.  This method should only be called when the app
    * is active.
    */
-  protected void pushCanvas() {
-    if (!isActive) {
-      throw new RuntimeException("CicadaApp.pushCanvas() called when the app wasn't active!");
-    }
-    
-    if (canvas == null) {
+  private void pushCanvas() {
+    if (!isActive || canvas == null) {
       return;
     }
     
@@ -166,6 +175,25 @@ public abstract class CicadaApp extends Service {
     intent.putExtra(CicadaIntents.EXTRA_APP_NAME, getAppName());
     intent.putExtra(CicadaIntents.EXTRA_SESSION_ID, sessionId);
     sendBroadcast(intent);
+  }
+  
+  /**
+   * Called by the Cicada app to request a screen update.  The app's onDraw will subsequently
+   * be called with an appropriately-sized canvas, and the result pushed to the device.
+   */
+  protected void invalidate() {
+    if (!isActive) {
+      throw new RuntimeException("CicadaApp.invalidate() called when the app wasn't active!");
+    }
+    
+    // Make sure the canvas has been initialized to the appropriate size for the app mode
+    getCanvas();
+    
+    // Ensure that the canvas is white, since the apps will tend to start drawing in black
+    canvas.drawColor(Color.WHITE);
+    
+    onDraw(canvas);
+    pushCanvas();
   }
   
   /**
@@ -200,6 +228,7 @@ public abstract class CicadaApp extends Service {
     }
     currentMode = mode;
     onActivate(mode);
+    invalidate();
   }
   
   private void deactivate() {
