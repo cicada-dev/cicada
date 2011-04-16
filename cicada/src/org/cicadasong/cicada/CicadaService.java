@@ -108,7 +108,7 @@ public class CicadaService extends Service {
           if (buttonPress != null) {
             if (buttonPress.hasButtonsPressed(ApolloConfig.Button.TOP_LEFT)) {
               switchToApp(AppList.DESCRIPTION);
-            } else if (!activeApp.className.equals(WidgetScreen.DESCRIPTION.className)) {
+            } else if (!WidgetScreen.DESCRIPTION.equals(activeApp)) {
               CicadaIntents.ButtonEvent.sendIntent(getApplicationContext(),
                   intent.getByteExtra(ApolloIntents.EXTRA_BUTTONS, (byte) 0));
             }
@@ -185,12 +185,12 @@ public class CicadaService extends Service {
     Log.v(Cicada.TAG, "Activating app: " + app.appName);
     activeApp = app;
     
-    if (IDLE_SCREEN.className.equals(app.className)) {
+    if (IDLE_SCREEN.equals(app)) {
       Log.v(Cicada.TAG, "Switching to idle screen...");
       ApolloIntents.pushText(this, getResources().getString(R.string.waiting_for_idle_screen));
       ApolloIntents.setApplicationMode(this, false);
       return;
-    } else if (WidgetScreen.DESCRIPTION.className.equals(app.className)) {
+    } else if (WidgetScreen.DESCRIPTION.equals(app)) {
       activateWidgets();
       return;
     }
@@ -202,10 +202,10 @@ public class CicadaService extends Service {
     Log.v(Cicada.TAG, "Dectivating app: " + app.appName);
     activeApp = null;
 
-    if (IDLE_SCREEN.className.equals(app.className)) {
+    if (IDLE_SCREEN.equals(app)) {
       ApolloIntents.setApplicationMode(this, true);
       return;
-    } else if (WidgetScreen.DESCRIPTION.className.equals(app.className)) {
+    } else if (WidgetScreen.DESCRIPTION.equals(app)) {
       deactivateWidgets();
       return;
     }

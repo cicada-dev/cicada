@@ -36,4 +36,31 @@ public class AppDescription {
   public String toString() {
     return appName;
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == null) {
+      return false;
+    }
+    
+    if (this == o) {
+      return true;
+    }
+    
+    AppDescription other = (AppDescription) o;
+    
+    return packageName.equals(other.packageName) && className.equals(other.className) &&
+        appName.equals(other.appName) && modes.equals(other.modes);
+  }
+
+  @Override
+  public int hashCode() {
+    int hash = 1;
+    hash += 31 * packageName.hashCode();
+    hash += 31 * className.hashCode();
+    hash += 31 * appName.hashCode();
+    hash += 31 * modes.hashCode();
+    return hash;
+  }
+  
 }

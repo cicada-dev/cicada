@@ -105,7 +105,7 @@ public class WidgetSetup extends Activity {
       if (i == spinner) {
         continue;
       }
-      if (selections[i].className.equals(app.className)) {
+      if (selections[i].equals(app)) {
         selections[i] = NONE;
       }
     }
@@ -134,7 +134,7 @@ public class WidgetSetup extends Activity {
   
   private int indexForApp(AppDescription app) {
     for (int i = 0; i < widgets.size(); i++) {
-      if (widgets.get(i).className.equals(app.className)) {
+      if (widgets.get(i).equals(app)) {
         return i;
       }
     }
