@@ -106,7 +106,7 @@ public class CicadaService extends Service {
              intent.getAction().equals(ApolloIntents.INTENT_APP_BUTTON_PRESS)) {
           ButtonPress buttonPress = ApolloIntents.ButtonPress.parseIntent(intent);
           if (buttonPress != null) {
-            if (buttonPress.hasOnlyButtonsPressed(ApolloConfig.Button.TOP_LEFT)) {
+            if (buttonPress.hasButtonsPressed(ApolloConfig.Button.TOP_LEFT)) {
               switchToApp(AppList.DESCRIPTION);
             } else if (!activeApp.className.equals(WidgetScreen.DESCRIPTION.className)) {
               CicadaIntents.ButtonEvent.sendIntent(getApplicationContext(),

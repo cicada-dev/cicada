@@ -95,11 +95,21 @@ public class CicadaIntents {
       return bitfield;
     }
     
-    public boolean hasButtonsPressed(Button... buttons) {
+    /**
+     * Returns true if the given buttons are pressed in this event.  (Other buttons may also
+     * be pressed at the same time.)  Returns false if some of the given buttons are not
+     * current pressed.
+     */
+    public boolean hasButtonsPressedNonExclusive(Button... buttons) {
       return (pressedButtons & bitfieldFromButtons(buttons)) != 0;
     }
     
-    public boolean hasOnlyButtonsPressed(Button... buttons) {
+    /**
+     * Returns true if the given buttons are pressed in the current event.  This method will return
+     * false if buttons not named in the parameter are also pressed; if you don't care about the
+     * state of the other buttons, use hasButtonsPressedNonExclusive() instead.
+     */
+    public boolean hasButtonsPressed(Button... buttons) {
       return pressedButtons == bitfieldFromButtons(buttons);
     }
   }

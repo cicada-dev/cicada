@@ -69,13 +69,13 @@ public class AppList extends CicadaApp {
 
   @Override
   protected void onButtonPress(ButtonEvent buttonEvent) {
-    if (buttonEvent.hasOnlyButtonsPressed(CicadaIntents.Button.TOP_RIGHT)) {
+    if (buttonEvent.hasButtonsPressed(CicadaIntents.Button.TOP_RIGHT)) {
       selectedIndex = Math.max(0, selectedIndex - 1);
       invalidate();
-    } else if (buttonEvent.hasOnlyButtonsPressed(CicadaIntents.Button.BOTTOM_RIGHT)) {
+    } else if (buttonEvent.hasButtonsPressed(CicadaIntents.Button.BOTTOM_RIGHT)) {
       selectedIndex = Math.min(apps.size() - 1, selectedIndex + 1);
       invalidate();
-    } else if (buttonEvent.hasOnlyButtonsPressed(CicadaIntents.Button.MIDDLE_RIGHT)) {
+    } else if (buttonEvent.hasButtonsPressed(CicadaIntents.Button.MIDDLE_RIGHT)) {
       launchSelectedApp();
     }
   }

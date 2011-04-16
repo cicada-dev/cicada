@@ -113,7 +113,7 @@ public class QuickText extends CicadaApp {
 
   @Override
   protected void onButtonPress(ButtonEvent buttonEvent) {
-    if (buttonEvent.hasOnlyButtonsPressed(Button.BOTTOM_RIGHT)) {
+    if (buttonEvent.hasButtonsPressed(Button.BOTTOM_RIGHT)) {
       if (state == State.READY_TO_SEND) {
         sendText();
       } else if (state == State.GOT_SEND_RESULT) {

@@ -80,7 +80,7 @@ public class DigitalClock extends CicadaApp {
 
   @Override
   protected void onButtonPress(ButtonEvent buttons) {
-    if (buttons.hasOnlyButtonsPressed(Button.MIDDLE_RIGHT)) {
+    if (buttons.hasButtonsPressed(Button.MIDDLE_RIGHT)) {
       is24Hour = !is24Hour;  // Simple time format toggle to demonstrate button handling.
       invalidate();  // Don't forget to redraw after a button event that changes the app state!
       vibrate(200, 0, 1);  // Just to demonstrate vibration

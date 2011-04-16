@@ -35,7 +35,7 @@ public class HelloCicada extends BroadcastReceiver {
   public void onReceive(Context context, Intent intent) {
     // Check that we have the right intent & button
     ButtonPress event = ButtonPress.parseIntent(intent);
-    if ((event == null) || !event.hasOnlyButtonsPressed(Button.BOTTOM_RIGHT)) {
+    if ((event == null) || !event.hasButtonsPressed(Button.BOTTOM_RIGHT)) {
       return;  // Not yours!
     }
     

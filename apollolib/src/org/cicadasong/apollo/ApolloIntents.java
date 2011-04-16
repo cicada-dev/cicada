@@ -113,11 +113,11 @@ public class ApolloIntents {
       return bitfield;
     }
     
-    public boolean hasButtonsPressed(Button... buttons) {
+    public boolean hasButtonsPressedNonExclusive(Button... buttons) {
       return (pressedButtons & bitfieldFromButtons(buttons)) != 0;
     }
     
-    public boolean hasOnlyButtonsPressed(Button... buttons) {
+    public boolean hasButtonsPressed(Button... buttons) {
       return pressedButtons == bitfieldFromButtons(buttons);
     }
   }
