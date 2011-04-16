@@ -34,6 +34,8 @@ public class AppList extends CicadaApp {
     "App List",
     AppType.APP);
   
+  private static final int LEFT_MARGIN = 2;
+  
   private List<AppDescription> apps;
   private int selectedIndex;
   private Paint paint;
@@ -99,7 +101,7 @@ public class AppList extends CicadaApp {
             (int)(y + paint.ascent()), canvas.getWidth(), (int)(y + paint.descent() + 1)), paint);
       }
       paint.setColor(i == selectedIndex ? Color.WHITE : Color.BLACK);
-      canvas.drawText(apps.get(i).appName, 0, y, paint);
+      canvas.drawText(apps.get(i).appName, LEFT_MARGIN, y, paint);
       y += paint.getFontSpacing();
     }
   }
