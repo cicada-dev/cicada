@@ -45,7 +45,7 @@ public class DigitalClock extends CicadaApp {
   }
 
   @Override
-  public void onActivate(AppType mode) {
+  protected void onActivate(AppType mode) {
     Log.v(TAG, "Digital Clock activated in mode: " + mode);
     
     time = new Time();
@@ -73,13 +73,13 @@ public class DigitalClock extends CicadaApp {
   }
 
   @Override
-  public void onDeactivate() {
+  protected void onDeactivate() {
     Log.v(TAG, "Digital Clock deactivated");
     handler.removeCallbacks(updateTimeTask);
   }
 
   @Override
-  public void onButtonPress(ButtonEvent buttons) {
+  protected void onButtonPress(ButtonEvent buttons) {
     if (buttons.hasOnlyButtonsPressed(Button.MIDDLE_RIGHT)) {
       is24Hour = !is24Hour;  // Simple time format toggle to demonstrate button handling.
       invalidate();  // Don't forget to redraw after a button event that changes the app state!

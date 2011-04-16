@@ -97,20 +97,20 @@ public abstract class CicadaApp extends Service {
    * 
    * @param mode the mode that the app is being activated in
    */
-  public abstract void onActivate(AppType mode);
+  protected abstract void onActivate(AppType mode);
   
   /**
    * Called when this app is deactivated; it should no longer call invalidate() to trigger screen
    * updates past this point.
    */
-  public abstract void onDeactivate();
+  protected abstract void onDeactivate();
   
   /**
    * Called when one or more device buttons are pressed.
    * 
    * @param buttonEvent indicates the buttons that were pressed.
    */
-  public abstract void onButtonPress(ButtonEvent buttonEvent);
+  protected abstract void onButtonPress(ButtonEvent buttonEvent);
   
   /**
    * Called when the app needs to render its screen contents.  This method should not be called

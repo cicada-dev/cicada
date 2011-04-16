@@ -58,14 +58,14 @@ public class QuickText extends CicadaApp {
   BroadcastReceiver setupUpdateIntentReceiver;
   
   @Override
-  public void onActivate(AppType mode) {
+  protected void onActivate(AppType mode) {
     registerIntentHandler();
     loadSetup();
     backToReady();
   }
 
   @Override
-  public void onDeactivate() {
+  protected void onDeactivate() {
     unregisterIntentHandler();
   }
   
@@ -112,7 +112,7 @@ public class QuickText extends CicadaApp {
   }
 
   @Override
-  public void onButtonPress(ButtonEvent buttonEvent) {
+  protected void onButtonPress(ButtonEvent buttonEvent) {
     if (buttonEvent.hasOnlyButtonsPressed(Button.BOTTOM_RIGHT)) {
       if (state == State.READY_TO_SEND) {
         sendText();

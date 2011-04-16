@@ -39,7 +39,7 @@ public class AppList extends CicadaApp {
   }
 
   @Override
-  public void onActivate(AppType mode) {
+  protected void onActivate(AppType mode) {
     paint = new Paint();
     paint.setTypeface(Typeface.DEFAULT);
     
@@ -57,11 +57,11 @@ public class AppList extends CicadaApp {
   }
 
   @Override
-  public void onDeactivate() {
+  protected void onDeactivate() {
   }
 
   @Override
-  public void onButtonPress(ButtonEvent buttonEvent) {
+  protected void onButtonPress(ButtonEvent buttonEvent) {
     if (buttonEvent.hasOnlyButtonsPressed(CicadaIntents.Button.TOP_RIGHT)) {
       selectedIndex = Math.max(0, selectedIndex - 1);
       invalidate();
