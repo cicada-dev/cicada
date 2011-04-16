@@ -69,7 +69,7 @@ public class DigitalClock extends CicadaApp {
       handler = new Handler();
     }
     handler.removeCallbacks(updateTimeTask);
-    handler.post(updateTimeTask);
+    handler.postDelayed(updateTimeTask, TIME_UPDATE_INTERVAL_MSEC);
   }
 
   @Override
