@@ -26,7 +26,10 @@ import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
 
 /**
  * Base class for Cicada apps that provides a clean interface for dealing with CicadaService.
@@ -41,12 +44,19 @@ public abstract class CicadaApp extends Service {
     WIDGET_AND_APP
   }
   
+  public static final int MESSAGETYPE_ACTIVATE = 1;
+  public static final int MESSAGETYPE_DEACTIVATE = 2;
+  public static final int MESSAGETYPE_BUTTON_EVENT = 3;
+  
   private AppType currentMode = AppType.NONE;
   private Bitmap bitmap;
   private Canvas canvas;
   private boolean isActive = false;
   private BroadcastReceiver receiver;
   private int sessionId;
+
+  // The messenger for communication with CicadaService.
+  final Messenger messenger = new Messenger(new IncomingHandler());
 
   @Override
   public void onCreate() {
@@ -68,14 +78,49 @@ public abstract class CicadaApp extends Service {
 
   @Override
   public void onDestroy() {
-    deactivate();
+    if (isActive) {
+      deactivate();
+    }
     unregisterReceiver(receiver);
     super.onDestroy();
   }
+  
+  /**
+   * Handler of incoming messages from clients.
+   */
+  class IncomingHandler extends Handler {
+    @Override
+    public void handleMessage(Message msg) {
+      switch(msg.what){
+      case MESSAGETYPE_ACTIVATE:
+        if (!isActive) {
+          sessionId = msg.arg1;
+          activate(AppType.values()[msg.arg2]);
+        }
+        break;
+
+      case MESSAGETYPE_DEACTIVATE:
+        if (isActive) {
+          deactivate();
+        }
+        break;
+        
+      case MESSAGETYPE_BUTTON_EVENT:
+        ButtonEvent event = new ButtonEvent((byte) msg.arg1);
+        onButtonPress(event);
+        break;
+
+      default:
+        super.handleMessage(msg);
+        break;
+      }
+    }
+  }
+
 
   @Override
   public IBinder onBind(Intent intent) {
-    return null;
+    return messenger.getBinder();
   }
   
   @Override

@@ -63,7 +63,7 @@ public class CicadaIntents {
   public static class ButtonEvent {
     private final byte pressedButtons;
     
-    private ButtonEvent(byte pressedButtons) {
+    public ButtonEvent(byte pressedButtons) {
       this.pressedButtons = pressedButtons;
     }
     

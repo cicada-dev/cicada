@@ -17,6 +17,7 @@ package org.cicadasong.cicada;
 import org.cicadasong.apollo.ApolloConfig;
 import org.cicadasong.apollo.ApolloIntents;
 import org.cicadasong.apollo.ApolloIntents.ButtonPress;
+import org.cicadasong.cicadalib.CicadaApp;
 import org.cicadasong.cicadalib.CicadaApp.AppType;
 import org.cicadasong.cicadalib.CicadaIntents;
 
@@ -26,7 +27,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 
 public class CicadaService extends Service {
@@ -41,6 +46,7 @@ public class CicadaService extends Service {
   
   private BroadcastReceiver receiver;
   private AppDescription activeApp;
+  private AppConnection activeConnection;
   private int sessionId = 1;
   private WidgetScreen widgetScreen = new WidgetScreen();
 
@@ -64,6 +70,7 @@ public class CicadaService extends Service {
     
     super.onCreate();
   }
+  
 
   private BroadcastReceiver createBroadcastReceiver() {
     return new BroadcastReceiver() {
@@ -108,9 +115,9 @@ public class CicadaService extends Service {
           if (buttonPress != null) {
             if (buttonPress.hasButtonsPressed(ApolloConfig.Button.TOP_LEFT)) {
               switchToApp(AppList.DESCRIPTION);
-            } else if (!WidgetScreen.DESCRIPTION.equals(activeApp)) {
-              CicadaIntents.ButtonEvent.sendIntent(getApplicationContext(),
-                  intent.getByteExtra(ApolloIntents.EXTRA_BUTTONS, (byte) 0));
+            } else if (activeApp != null && !WidgetScreen.DESCRIPTION.equals(activeApp)) {
+              byte buttons = intent.getByteExtra(ApolloIntents.EXTRA_BUTTONS, (byte) 0);
+              activeConnection.sendButtonEvent(buttons);
             }
           }
         } else if (intent.getAction().equals(INTENT_LAUNCH_APP)) {
@@ -174,6 +181,10 @@ public class CicadaService extends Service {
   }
   
   private void switchToApp(AppDescription app) {
+    if (app.equals(activeApp)) {
+      return;
+    }
+    
     if (activeApp != null) {
       deactivateApp(activeApp);
     }
@@ -195,7 +206,8 @@ public class CicadaService extends Service {
       return;
     }
     
-    sendActivationIntent(app, sessionId, AppType.APP);
+    activeConnection = new AppConnection(app, sessionId, AppType.APP);
+    activeConnection.connect();
   }
   
   private void deactivateApp(AppDescription app) {
@@ -210,7 +222,9 @@ public class CicadaService extends Service {
       return;
     }
     
-    sendDeactivationIntent(app);
+    activeConnection.deactivateApp();
+    activeConnection.disconnect();
+    activeConnection = null;
   }
 
   private void activateWidgets() {
@@ -246,7 +260,7 @@ public class CicadaService extends Service {
     
     widgetScreen.clearSessionIds();
   }
-
+  
   private void sendActivationIntent(AppDescription app, int appSessionId, AppType mode) {
     Intent serviceIntent = new Intent();
     serviceIntent.setComponent(new ComponentName(app.packageName, app.className));
@@ -262,5 +276,100 @@ public class CicadaService extends Service {
     serviceIntent.setAction(CicadaIntents.INTENT_DEACTIVATE_APP);
     stopService(serviceIntent);
   }
+  
+  private void appDisconnectedUnexpectedly(AppConnection connection) {
+    Log.v(Cicada.TAG, "App disconnected unexpectedly: " + connection.getApp());
+    
+    // The active app died, bump back to app list.
+    if (connection.getApp().equals(activeApp)) {
+      activeApp = null;
+      activeConnection = null;
+      switchToApp(AppList.DESCRIPTION);
+    }
+  }
 
+  private class AppConnection implements ServiceConnection {
+    private boolean connected;
+    private boolean requestedDisconnect;
+    private Messenger messenger;
+    private final AppDescription app;
+    private int sessionId;
+    private AppType mode;
+    
+    public AppConnection(AppDescription app, int sessionId, AppType mode) {
+      this.app = app;
+      this.sessionId = sessionId;
+      this.mode = mode;
+    }
+
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+      Log.v(Cicada.TAG, "Successfully connected to service for app: " + app);
+      this.messenger = new Messenger(service);
+      connected = true;
+      activateApp();
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+      connected = false;
+      if (!requestedDisconnect) {
+        appDisconnectedUnexpectedly(this);
+      }
+    }
+    
+    public void connect() {
+      Log.v(Cicada.TAG, "Attempting to bind service for app: " + app);
+      requestedDisconnect = false;
+      Intent bindingIntent = new Intent();
+      bindingIntent.setComponent(app.getComponentName());
+      bindService(bindingIntent, this, Context.BIND_AUTO_CREATE);
+    }
+    
+    public void disconnect() {
+      requestedDisconnect = true;
+      unbindService(this);
+    }
+    
+    public boolean isConnected() {
+      return connected;
+    }
+    
+    public AppDescription getApp() {
+      return app;
+    }
+    
+    public void activateApp() {
+      Message activateMessage =
+          Message.obtain(null, CicadaApp.MESSAGETYPE_ACTIVATE, sessionId, mode.ordinal());
+      sendMessage(activateMessage);
+    }
+    
+    public void deactivateApp() {
+      sessionId = 0;
+      Message deactivateMessage = Message.obtain(null, CicadaApp.MESSAGETYPE_DEACTIVATE);
+      sendMessage(deactivateMessage);
+    }
+    
+    public void sendButtonEvent(byte buttons) {
+      Message buttonMessage =
+        Message.obtain(null, CicadaApp.MESSAGETYPE_BUTTON_EVENT, buttons, 0);
+      sendMessage(buttonMessage);
+    }
+    
+    private void sendMessage(Message message) {
+      if (!connected) {
+        Log.w(Cicada.TAG,
+            "Attempted to send message " + message + " to app " + app + " when disconnected");
+        return;
+      }
+
+      try {
+        messenger.send(message);
+      } catch (RemoteException e) {
+        Log.w(Cicada.TAG,
+            "RemoteException when sending message " + message + " to app " + app + ":" + e);
+      }
+    }
+  }
 }
