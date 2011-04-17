@@ -7,7 +7,6 @@
     
     <string name="service_running_toggle_label">Cicada Service is Running</string>
     <string name="service_stopped_toggle_label">Cicada Service is Stopped</string>
-    <string name="menu_label_stop_service">Stop Service</string>
     
     <string name="app_list_service_name">Cicada App List</string>
     

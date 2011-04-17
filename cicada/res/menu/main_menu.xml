@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/menu_item_stop_service"
-          android:title="@string/menu_label_stop_service" />
     <item android:id="@+id/menu_item_widget_setup"
           android:title="@string/menu_label_widget_setup" />
 </menu>
