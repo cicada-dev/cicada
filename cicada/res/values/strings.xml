@@ -13,6 +13,10 @@
     <string name="welcome_on_screen">Welcome\nto Cicada</string>
     <string name="waiting_for_idle_screen">Waiting for\nidle screen\nto update...</string>
     
+    <!-- Displayed in the service's ongoing notification -->
+    <string name="notification_title">Cicada is active</string>
+    <string name="notification_body">Select to configure or stop Cicada.</string>
+    
     <!-- Widget Setup -->
     <string name="widget_setup">Widget Setup</string>
     <string name="menu_label_widget_setup">Widget Setup</string>

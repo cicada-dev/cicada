@@ -53,7 +53,9 @@ public class Cicada extends Activity {
     });
     updateServiceToggleState();
     
-    startService(new Intent(getBaseContext(), CicadaService.class));
+    if (!CicadaService.isRunning()) {
+      startService(new Intent(getBaseContext(), CicadaService.class));
+    }
   }
 
   @Override

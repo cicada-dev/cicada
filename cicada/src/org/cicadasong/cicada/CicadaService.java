@@ -21,6 +21,9 @@ import org.cicadasong.cicadalib.CicadaApp;
 import org.cicadasong.cicadalib.CicadaApp.AppType;
 import org.cicadasong.cicadalib.CicadaIntents;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -143,6 +146,8 @@ public class CicadaService extends Service {
 
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
+    startForeground();
+    
     if (activeApp != null) {
       deactivateApp(activeApp);
     }
@@ -168,6 +173,22 @@ public class CicadaService extends Service {
     
     return super.onStartCommand(intent, flags, startId);
   }
+
+  private void startForeground() {
+    String notificationTitle = getString(R.string.notification_title);
+    String notificationBody = getString(R.string.notification_body);
+
+    Notification notification = new Notification(R.drawable.icon, notificationTitle, 0);
+
+    // The PendingIntent to launch our activity if the user selects this notification
+    PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+            new Intent(this, Cicada.class), 0);
+
+    // Set the info for the views that show in the notification panel.
+    notification.setLatestEventInfo(getApplicationContext(), notificationTitle, notificationBody, contentIntent);
+    notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
+    startForeground(1, notification);
+  }
   
   @Override
   public void onDestroy() {
@@ -179,6 +200,8 @@ public class CicadaService extends Service {
     
     unregisterReceiver(receiver);
     ApolloIntents.setApplicationMode(this, false);
+    
+    stopForeground(true);
     
     isRunning = false;
     sendBroadcast(new Intent(INTENT_SERVICE_STOPPED));
