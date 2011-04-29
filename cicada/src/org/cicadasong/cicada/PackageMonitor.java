@@ -26,6 +26,8 @@ import android.util.Log;
  */
 
 public class PackageMonitor extends BroadcastReceiver {
+  public static final String INTENT_APPS_CHANGED = "org.cicadasong.cicada.APPS_CHANGED";
+  
   public static final String APP_TYPE_METADATA_KEY = "org.cicadasong.cicada.apptype";
   
   @Override
@@ -38,16 +40,20 @@ public class PackageMonitor extends BroadcastReceiver {
     
     String packageName = intent.getData().getSchemeSpecificPart();
     
+    boolean changed = false;
     if (intent.getAction().equals(Intent.ACTION_PACKAGE_REMOVED)) {
       if (!intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)) {
         AppDatabase db = new AppDatabase(context);
-        db.deleteAppsWithPackageName(packageName);
+        if (db.deleteAppsWithPackageName(packageName) > 0) {
+          changed = true;
+        }
         db.close();
       }
     } else {
       List<AppDescription> apps =
-          PackageUtil.getAppsFromPackage(context.getPackageManager(), packageName);
+          PackageUtil.getCicadaAppsFromPackage(context.getPackageManager(), packageName);
       if (apps.size() > 0) {
+        changed = true;
         AppDatabase db = new AppDatabase(context);
         db.deleteAppsWithPackageName(apps.get(0).packageName);
         
@@ -58,6 +64,9 @@ public class PackageMonitor extends BroadcastReceiver {
         
         db.close();
       }
+    }
+    if (changed) {
+      context.sendBroadcast(new Intent(INTENT_APPS_CHANGED));
     }
   }
 }

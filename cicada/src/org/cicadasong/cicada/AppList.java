@@ -20,7 +20,10 @@ import org.cicadasong.cicadalib.CicadaApp;
 import org.cicadasong.cicadalib.CicadaIntents;
 import org.cicadasong.cicadalib.CicadaIntents.ButtonEvent;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -39,6 +42,7 @@ public class AppList extends CicadaApp {
   private List<AppDescription> apps;
   private int selectedIndex;
   private Paint paint;
+  private BroadcastReceiver receiver;
   
   @Override
   public String getAppName() {
@@ -53,6 +57,19 @@ public class AppList extends CicadaApp {
     if (apps == null) {
       loadApps();
     }
+    
+    IntentFilter filter = new IntentFilter();
+    filter.addAction(PackageMonitor.INTENT_APPS_CHANGED);
+    
+    receiver = new BroadcastReceiver() {
+      @Override
+      public void onReceive(Context context, Intent intent) {
+        loadApps();
+        selectedIndex = Math.min(apps.size() - 1, selectedIndex);
+        invalidate();
+      }
+    };
+    registerReceiver(receiver, filter);
   }
   
   private void loadApps() {
@@ -65,6 +82,7 @@ public class AppList extends CicadaApp {
 
   @Override
   protected void onDeactivate() {
+    unregisterReceiver(receiver);
   }
 
   @Override

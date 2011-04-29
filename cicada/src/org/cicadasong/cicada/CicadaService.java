@@ -258,7 +258,8 @@ public class CicadaService extends Service {
   }
   
   private void activateApp(AppDescription app, AppType mode) {
-    Log.v(Cicada.TAG, "Activating app: " + app.appName);
+    Log.v(Cicada.TAG,
+        "Activating app: " + app.appName + " (" + app.packageName + "/" + app.className + ")");
     activeApp = app;
     
     if (IDLE_SCREEN.equals(app)) {

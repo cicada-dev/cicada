@@ -64,8 +64,8 @@ public class AppDatabase {
     db.insert(APPS_TABLE_NAME, null, values);
   }
   
-  public void deleteAppsWithPackageName(String packageName) {
-    db.delete(APPS_TABLE_NAME, PACKAGE_NAME + "=\"" + packageName + "\"", null);
+  public int deleteAppsWithPackageName(String packageName) {
+    return db.delete(APPS_TABLE_NAME, PACKAGE_NAME + "=\"" + packageName + "\"", null);
   }
   
   public List<AppDescription> getApps() {

@@ -33,7 +33,7 @@ public class PackageUtil {
   private PackageUtil() {
   }
   
-  public static List<AppDescription> getAppsFromPackage(PackageManager pm, String packageName) {
+  public static List<AppDescription> getCicadaAppsFromPackage(PackageManager pm, String packageName) {
     ArrayList<AppDescription> apps = new ArrayList<AppDescription>();
     
     try {

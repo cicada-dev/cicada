@@ -43,7 +43,7 @@ public class AppScanner extends AsyncTask<Void, Void, Void> {
     AppDatabase db = new AppDatabase(context);
     for (PackageInfo pi : packages) {
       List<AppDescription> apps =
-        PackageUtil.getAppsFromPackage(context.getPackageManager(), pi.packageName);
+        PackageUtil.getCicadaAppsFromPackage(context.getPackageManager(), pi.packageName);
       db.deleteAppsWithPackageName(pi.packageName);
       for(AppDescription app : apps) {
         Log.v(Cicada.TAG, "AppScanner found Cicada app: " + app.appName);
