@@ -14,6 +14,9 @@
 
 package org.cicadasong.cicada;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.cicadasong.apollo.ApolloConfig;
 import org.cicadasong.apollo.ApolloIntents;
 import org.cicadasong.apollo.ApolloIntents.ButtonPress;
@@ -54,6 +57,7 @@ public class CicadaService extends Service {
   private int sessionId = 1;
   private WidgetScreen widgetScreen = new WidgetScreen();
   private static boolean isRunning = false;
+  private Map<Byte, AppDescription> hotkeys = new HashMap<Byte, AppDescription>();
   
   @Override
   public IBinder onBind(Intent intent) {
@@ -68,10 +72,13 @@ public class CicadaService extends Service {
     filter.addAction(CicadaIntents.INTENT_VIBRATE);
     filter.addAction(ApolloIntents.INTENT_IDLE_BUTTON_PRESS);
     filter.addAction(ApolloIntents.INTENT_APP_BUTTON_PRESS);
+    filter.addAction(HotkeySetupActivity.INTENT_HOTKEYS_CHANGED);
     filter.addAction(INTENT_LAUNCH_APP);
     
     receiver = createBroadcastReceiver();
     registerReceiver(receiver, filter);
+
+    loadHotkeys();
     
     Log.v(Cicada.TAG, "Cicada Service Started");
     isRunning = true;
@@ -82,6 +89,15 @@ public class CicadaService extends Service {
   
   public static boolean isRunning() {
     return isRunning;
+  }
+  
+  private void loadHotkeys() {
+    AppDatabase db = new AppDatabase(this);
+    hotkeys.clear();
+    for (HotkeySetupEntry entry : db.getHotkeySetup()) {
+      hotkeys.put(entry.hotkeys, entry.app);
+    }
+    db.close();
   }
 
   private BroadcastReceiver createBroadcastReceiver() {
@@ -125,10 +141,15 @@ public class CicadaService extends Service {
              intent.getAction().equals(ApolloIntents.INTENT_APP_BUTTON_PRESS)) {
           ButtonPress buttonPress = ApolloIntents.ButtonPress.parseIntent(intent);
           if (buttonPress != null) {
+            byte buttons = intent.getByteExtra(ApolloIntents.EXTRA_BUTTONS, (byte) 0);
             if (buttonPress.hasButtonsPressed(ApolloConfig.Button.TOP_LEFT)) {
               switchToApp(AppList.DESCRIPTION);
-            } else if (activeApp != null && !WidgetScreen.DESCRIPTION.equals(activeApp)) {
-              byte buttons = intent.getByteExtra(ApolloIntents.EXTRA_BUTTONS, (byte) 0);
+            } else if (IDLE_SCREEN.equals(activeApp) ||
+                WidgetScreen.DESCRIPTION.equals(activeApp)) {
+              if (hotkeys.containsKey(buttons)) {
+                switchToApp(hotkeys.get(buttons));
+              }
+            } else if (activeApp != null) {
               activeConnection.sendButtonEvent(buttons);
             }
           }
@@ -138,6 +159,8 @@ public class CicadaService extends Service {
           String appName = intent.getExtras().getString(EXTRA_APP_NAME);
           AppDescription app = new AppDescription(packageName, className, appName, AppType.APP);
           switchToApp(app);
+        } else if (intent.getAction().equals(HotkeySetupActivity.INTENT_HOTKEYS_CHANGED)) {
+          loadHotkeys();
         }
       }
     };
@@ -184,7 +207,8 @@ public class CicadaService extends Service {
             new Intent(this, Cicada.class), 0);
 
     // Set the info for the views that show in the notification panel.
-    notification.setLatestEventInfo(getApplicationContext(), notificationTitle, notificationBody, contentIntent);
+    notification.setLatestEventInfo(
+        getApplicationContext(), notificationTitle, notificationBody, contentIntent);
     notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
     startForeground(1, notification);
   }

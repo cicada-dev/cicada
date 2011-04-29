@@ -21,6 +21,11 @@
                   android:configChanges="keyboardHidden|orientation">
         </activity>
 
+        <activity android:name=".HotkeySetupActivity"
+                  android:label="@string/hotkey_setup"
+                  android:configChanges="keyboardHidden|orientation">
+        </activity>
+
         <receiver android:name=".PackageMonitor">
           <intent-filter>
             <action android:name="android.intent.action.PACKAGE_ADDED" />

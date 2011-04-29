@@ -30,11 +30,13 @@ public class AppDatabase {
   private static final int DATABASE_VERSION = 1;
   private static final String APPS_TABLE_NAME = "apps";
   private static final String WIDGET_SETUP_TABLE_NAME = "widget_setup";
+  private static final String HOTKEY_SETUP_TABLE_NAME = "hotkey_setup";
   private static final String APP_NAME = "name";
   private static final String PACKAGE_NAME = "package_name";
   private static final String CLASS_NAME = "class_name";
   private static final String APP_TYPE = "app_type";
   private static final String COL_WIDGET_INDEX = "widget_index";
+  private static final String COL_HOTKEYS = "hotkeys";
   
   private static final String WHERE_WIDGET = String.format("%s = %d OR %s = %d",
       APP_TYPE, AppType.WIDGET.ordinal(), APP_TYPE, AppType.WIDGET_AND_APP.ordinal());
@@ -150,6 +152,50 @@ public class AppDatabase {
     }
   }
 
+  public List<HotkeySetupEntry> getHotkeySetup() {
+    ArrayList<HotkeySetupEntry> entries = new ArrayList<HotkeySetupEntry>();
+    
+    Cursor cursor = db.query(HOTKEY_SETUP_TABLE_NAME,
+        new String[] { PACKAGE_NAME, CLASS_NAME, APP_NAME, APP_TYPE, COL_HOTKEYS }, 
+        null, 
+        null, 
+        null, 
+        null, 
+        COL_HOTKEYS + " ASC");
+    if (cursor.moveToFirst()) {
+      do {
+        AppType type = AppType.values()[cursor.getInt(3)];
+        AppDescription app =
+            new AppDescription(cursor.getString(0), cursor.getString(1), cursor.getString(2), type);
+        entries.add(new HotkeySetupEntry(app, (byte) cursor.getInt(4)));
+      } while (cursor.moveToNext());
+    }
+    if (cursor != null & !cursor.isClosed()) {
+      cursor.close();
+    }
+    
+    return entries;
+  }
+  
+  public void setHotkeySetup(List<HotkeySetupEntry> hotkeyEntries) {
+    // Clear out the old values
+    db.delete(HOTKEY_SETUP_TABLE_NAME, null, null);
+    
+    for (HotkeySetupEntry entry : hotkeyEntries) {
+      if (entry.app == null) {
+        continue;
+      }
+
+      ContentValues values = new ContentValues();
+      values.put(APP_NAME, entry.app.appName);
+      values.put(PACKAGE_NAME, entry.app.packageName);
+      values.put(CLASS_NAME, entry.app.className);
+      values.put(APP_TYPE, entry.app.modes.ordinal());
+      values.put(COL_HOTKEYS, entry.hotkeys);
+      db.insert(HOTKEY_SETUP_TABLE_NAME, null, values);
+    }
+  }
+
   public static class AppDatabaseHelper extends SQLiteOpenHelper {
 
     AppDatabaseHelper(Context context) {
@@ -165,6 +211,10 @@ public class AppDatabase {
       db.execSQL("CREATE TABLE " + WIDGET_SETUP_TABLE_NAME +
           "(" + COL_WIDGET_INDEX + " INTEGER PRIMARY KEY, " + APP_NAME + " TEXT, " +
           PACKAGE_NAME + " TEXT, " + CLASS_NAME + " TEXT, " + APP_TYPE + " INTEGER)");
+
+      db.execSQL("CREATE TABLE " + HOTKEY_SETUP_TABLE_NAME +
+              "(" + COL_HOTKEYS + " INTEGER PRIMARY KEY, " + APP_NAME + " TEXT, " +
+              PACKAGE_NAME + " TEXT, " + CLASS_NAME + " TEXT, " + APP_TYPE + " INTEGER)");
     }
 
     @Override

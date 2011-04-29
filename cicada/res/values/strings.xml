@@ -24,4 +24,11 @@
     <string name="label_middle_widget">Middle Widget</string>
     <string name="label_bottom_widget">Bottom Widget</string>
     <string name="no_widgets_set_up">No widgets setup yet!\n\nUse the Cicada phone app to\nset them up.</string>
+    
+    <!-- Hotkey Setup -->
+    <string name="hotkey_setup">Hotkey Setup</string>
+    <string name="menu_label_hotkey_setup">Hotkey Setup</string>
+    <string name="label_middle_left_button">Middle-Left Button</string>
+    <string name="label_middle_right_button">Middle-Right Button</string>
+    <string name="label_bottom_right_button">Bottom-Right Button</string>
 </resources>

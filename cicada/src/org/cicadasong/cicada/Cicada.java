@@ -115,13 +115,22 @@ public class Cicada extends Activity {
       launchWidgetSetup();
       return true;
 
+    case R.id.menu_item_hotkey_setup:
+      launchHotkeySetup();
+      return true;
+
     default:
       return super.onOptionsItemSelected(item);
     }
   }
   
   private void launchWidgetSetup() {
-    Intent intent = new Intent(getBaseContext(), WidgetSetup.class);
+    Intent intent = new Intent(this, WidgetSetup.class);
+    startActivity(intent);
+  }
+  
+  private void launchHotkeySetup() {
+    Intent intent = new Intent(this, HotkeySetupActivity.class);
     startActivity(intent);
   }
 }
