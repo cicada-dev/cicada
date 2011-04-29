@@ -73,6 +73,7 @@ public class CicadaService extends Service {
     filter.addAction(ApolloIntents.INTENT_IDLE_BUTTON_PRESS);
     filter.addAction(ApolloIntents.INTENT_APP_BUTTON_PRESS);
     filter.addAction(HotkeySetupActivity.INTENT_HOTKEYS_CHANGED);
+    filter.addAction(WidgetSetup.INTENT_WIDGETS_CHANGED);
     filter.addAction(INTENT_LAUNCH_APP);
     
     receiver = createBroadcastReceiver();
@@ -161,6 +162,11 @@ public class CicadaService extends Service {
           switchToApp(app);
         } else if (intent.getAction().equals(HotkeySetupActivity.INTENT_HOTKEYS_CHANGED)) {
           loadHotkeys();
+        } else if (intent.getAction().equals(WidgetSetup.INTENT_WIDGETS_CHANGED)) {
+          if (WidgetScreen.DESCRIPTION.equals(activeApp)) {
+            deactivateWidgets();
+            activateWidgets();
+          }
         }
       }
     };

@@ -15,11 +15,13 @@
 package org.cicadasong.cicada;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.cicadasong.cicadalib.CicadaApp.AppType;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -33,6 +35,7 @@ import android.widget.Spinner;
  */
 
 public class WidgetSetup extends Activity {
+  public static final String INTENT_WIDGETS_CHANGED = "org.cicadasong.cicada.WIDGETS_CHANGED";
   
   public static final AppDescription NONE =
       new AppDescription("NONE", "NONE", "(None)", AppType.NONE);
@@ -43,6 +46,7 @@ public class WidgetSetup extends Activity {
   
   private List<AppDescription> widgets;
   private AppDescription[] selections;
+  private AppDescription[] lastDBSelections = new AppDescription[WidgetScreen.NUM_WIDGETS];
   
   private Spinner[] spinners;
 
@@ -61,6 +65,7 @@ public class WidgetSetup extends Activity {
         selections[i] = NONE;
       }
     }
+    System.arraycopy(selections, 0, lastDBSelections, 0, selections.length);
     
     db.close();
     
@@ -112,6 +117,13 @@ public class WidgetSetup extends Activity {
     selections[spinner] = app;
     updateSpinners();
     
+    if (!Arrays.equals(selections, lastDBSelections)) {
+      saveSetup();
+    }
+  }
+
+  private void saveSetup() {
+    System.arraycopy(selections, 0, lastDBSelections, 0, selections.length);
     List<AppDescription> storeWidgets = new ArrayList<AppDescription>();
     for (int i = 0; i < selections.length; i++) {
       if (selections[i] == NONE) {
@@ -124,6 +136,8 @@ public class WidgetSetup extends Activity {
     AppDatabase db = new AppDatabase(this);
     db.setWidgetSetup(storeWidgets);
     db.close();
+    
+    sendBroadcast(new Intent(INTENT_WIDGETS_CHANGED));
   }
   
   private void updateSpinners() {
@@ -133,11 +147,6 @@ public class WidgetSetup extends Activity {
   }
   
   private int indexForApp(AppDescription app) {
-    for (int i = 0; i < widgets.size(); i++) {
-      if (widgets.get(i).equals(app)) {
-        return i;
-      }
-    }
-    return 0;
+    return Math.max(0, widgets.indexOf(app));
   }
 }
