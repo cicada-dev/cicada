@@ -24,6 +24,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -31,6 +32,8 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 
 public class AppList extends CicadaApp {
+  private static String PREF_APP_LIST_SELECTED_INDEX = "AppListSelectedIndex";
+  
   public static final AppDescription DESCRIPTION = new AppDescription(
     AppList.class.getPackage().getName(),
     AppList.class.getName(),
@@ -50,6 +53,32 @@ public class AppList extends CicadaApp {
   }
 
   @Override
+  public void onCreate() {
+    loadSelectedIndex();
+    
+    super.onCreate();
+  }
+
+  @Override
+  public void onDestroy() {
+    saveSelectedIndex();
+
+    super.onDestroy();
+  }
+
+  private void loadSelectedIndex() {
+    SharedPreferences prefs = getSharedPreferences(PrefUtil.SHARED_PREF_NAME, Context.MODE_PRIVATE);
+    selectedIndex = prefs.getInt(PREF_APP_LIST_SELECTED_INDEX, 0);
+  }
+  
+  private void saveSelectedIndex() {
+    SharedPreferences.Editor prefEdit =
+        getSharedPreferences(PrefUtil.SHARED_PREF_NAME, Context.MODE_PRIVATE).edit();
+    prefEdit.putInt(PREF_APP_LIST_SELECTED_INDEX, selectedIndex);
+    prefEdit.commit();
+  }
+
+  @Override
   protected void onActivate(AppType mode) {
     paint = new Paint();
     paint.setTypeface(Typeface.DEFAULT);
@@ -65,8 +94,7 @@ public class AppList extends CicadaApp {
       @Override
       public void onReceive(Context context, Intent intent) {
         loadApps();
-        selectedIndex = Math.min(apps.size() - 1, selectedIndex);
-        invalidate();
+        changeSelection(selectedIndex);  // Counting on sanitization/redraw here
       }
     };
     registerReceiver(receiver, filter);
@@ -88,18 +116,22 @@ public class AppList extends CicadaApp {
   @Override
   protected void onButtonPress(ButtonEvent buttonEvent) {
     if (buttonEvent.hasButtonsPressed(CicadaIntents.Button.TOP_RIGHT)) {
-      selectedIndex = Math.max(0, selectedIndex - 1);
-      invalidate();
+      changeSelection(selectedIndex - 1);
     } else if (buttonEvent.hasButtonsPressed(CicadaIntents.Button.BOTTOM_RIGHT)) {
-      selectedIndex = Math.min(apps.size() - 1, selectedIndex + 1);
-      invalidate();
+      changeSelection(selectedIndex + 1);
     } else if (buttonEvent.hasButtonsPressed(CicadaIntents.Button.MIDDLE_RIGHT)) {
       launchSelectedApp();
     } else if (buttonEvent.hasButtonsPressed(CicadaIntents.Button.TOP_LEFT)) {
       // Most Cicada apps can't trap the top left button, but it's reserved for AppList so we can.
-      selectedIndex = 0;
-      invalidate();
+      changeSelection(0);
     }
+  }
+  
+  private void changeSelection(int newIndex) {
+    selectedIndex = newIndex;
+    selectedIndex = Math.min(apps.size() - 1, selectedIndex);
+    selectedIndex = Math.max(0, selectedIndex);
+    invalidate();
   }
   
   private void launchSelectedApp() {
