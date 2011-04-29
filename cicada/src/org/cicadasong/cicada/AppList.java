@@ -95,6 +95,10 @@ public class AppList extends CicadaApp {
       invalidate();
     } else if (buttonEvent.hasButtonsPressed(CicadaIntents.Button.MIDDLE_RIGHT)) {
       launchSelectedApp();
+    } else if (buttonEvent.hasButtonsPressed(CicadaIntents.Button.TOP_LEFT)) {
+      // Most Cicada apps can't trap the top left button, but it's reserved for AppList so we can.
+      selectedIndex = 0;
+      invalidate();
     }
   }
   

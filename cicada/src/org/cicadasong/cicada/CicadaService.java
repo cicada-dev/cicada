@@ -144,7 +144,11 @@ public class CicadaService extends Service {
           if (buttonPress != null) {
             byte buttons = intent.getByteExtra(ApolloIntents.EXTRA_BUTTONS, (byte) 0);
             if (buttonPress.hasButtonsPressed(ApolloConfig.Button.TOP_LEFT)) {
-              switchToApp(AppList.DESCRIPTION);
+              if (!AppList.DESCRIPTION.equals(activeApp)) {
+                switchToApp(AppList.DESCRIPTION);
+              } else {
+                activeConnection.sendButtonEvent(buttons);
+              }
             } else if (IDLE_SCREEN.equals(activeApp) ||
                 WidgetScreen.DESCRIPTION.equals(activeApp)) {
               if (hotkeys.containsKey(buttons)) {
