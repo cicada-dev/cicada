@@ -41,9 +41,9 @@ import android.os.Handler;
 import android.util.Log;
 
 /**
- * An example app that fetches the current status of a particular London Underground line.
- * If this was a real app, it would also provide a phone-side setup screen to pick the train
- * lines to show.
+ * An example app that displays the next several bus times at a given stop.  At present, the
+ * stop is hard-coded; a real app would offer a phone-side setup UI to pick the stop, and/or
+ * possibly autodetect the nearest stop(s) based on the phone's current location.
  */
 public class NextBuses extends CicadaApp {
   public static final String TAG = NextBuses.class.getSimpleName();
@@ -56,6 +56,42 @@ public class NextBuses extends CicadaApp {
   private Handler handler;
   private PredictionSet predictions = null;
   private boolean inInitialFetch = true;
+  
+  // Paint objects for different fonts
+  private Paint metawatch11px;
+  private Paint metawatch7px;
+  private Paint metawatch5px;
+  private Paint default10pt;
+  
+  @Override
+  public void onCreate() {
+    createFontPainters();
+  
+    super.onCreate();
+  }
+
+  private void createFontPainters() {
+    Typeface fontMetawatch11px =
+        Typeface.createFromAsset(getAssets(), "fonts/metawatch_16pt_11pxl_proto1.ttf");
+    metawatch11px = new Paint();
+    metawatch11px.setTypeface(fontMetawatch11px);
+    metawatch11px.setTextSize(16);
+    
+    Typeface fontMetawatch7px =
+        Typeface.createFromAsset(getAssets(), "fonts/metawatch_8pt_7pxl_CAPS_proto1.ttf");
+    metawatch7px = new Paint();
+    metawatch7px.setTypeface(fontMetawatch7px);
+    metawatch7px.setTextSize(8);
+    
+    Typeface fontMetawatch5px =
+        Typeface.createFromAsset(getAssets(), "fonts/metawatch_8pt_5pxl_CAPS_proto1.ttf");
+    metawatch5px = new Paint();
+    metawatch5px.setTypeface(fontMetawatch5px);
+    metawatch5px.setTextSize(8);
+    
+    default10pt = new Paint();
+    default10pt.setTextSize(10);
+  }
 
   @Override
   protected void onActivate(AppType mode) {
@@ -89,18 +125,17 @@ public class NextBuses extends CicadaApp {
   }
 
   protected void onDraw(Canvas canvas) {
-    Paint paint = new Paint();
-    paint.setTextAlign(Paint.Align.LEFT);
-    paint.setTypeface(Typeface.DEFAULT);
-    paint.setTextSize(11);
+    // Set initial font for heading
+    Paint paint = isWidget() ? metawatch7px : metawatch11px;
     
     int x = 2;
     int y = isWidget() ? canvas.getHeight() / 2 : (int) paint.getFontSpacing() + 2;
-
+    
     canvas.drawText(stopName, x, y - paint.descent() - 1, paint);
 
-    paint.setTextAlign(Paint.Align.LEFT);
-    paint.setTextSize(10);
+    // Set font for "body"
+    paint = isWidget() ? metawatch5px : default10pt;
+    
     x = 2;
     y += (int)-paint.ascent() + 1;
     
