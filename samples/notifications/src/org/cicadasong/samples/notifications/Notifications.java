@@ -99,7 +99,7 @@ public class Notifications extends CicadaApp {
   }
 
   @Override
-  protected void onActivate(AppType mode) {
+  protected void onResume() {
     receiver = new BroadcastReceiver() {
       
       @Override
@@ -125,7 +125,7 @@ public class Notifications extends CicadaApp {
   }
 
   @Override
-  protected void onDeactivate() {
+  protected void onPause() {
     unregisterReceiver(receiver);
   }
 

@@ -94,8 +94,8 @@ public class NextBuses extends CicadaApp {
   }
 
   @Override
-  protected void onActivate(AppType mode) {
-    Log.v(TAG, "Next Buses activated in mode: " + mode);
+  protected void onResume() {
+    Log.v(TAG, "Next Buses activated in mode: " + getCurrentMode());
 
     if (updateStatusTask == null) {
       updateStatusTask = new Runnable() {
@@ -116,7 +116,7 @@ public class NextBuses extends CicadaApp {
   }
 
   @Override
-  protected void onDeactivate() {
+  protected void onPause() {
     handler.removeCallbacks(updateStatusTask);
   }
 

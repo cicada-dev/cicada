@@ -58,14 +58,14 @@ public class QuickText extends CicadaApp {
   BroadcastReceiver setupUpdateIntentReceiver;
   
   @Override
-  protected void onActivate(AppType mode) {
+  protected void onResume() {
     registerIntentHandler();
     loadSetup();
     backToReady();
   }
 
   @Override
-  protected void onDeactivate() {
+  protected void onPause() {
     unregisterIntentHandler();
   }
   

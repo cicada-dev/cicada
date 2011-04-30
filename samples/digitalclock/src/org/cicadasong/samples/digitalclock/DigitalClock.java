@@ -45,8 +45,8 @@ public class DigitalClock extends CicadaApp {
   }
 
   @Override
-  protected void onActivate(AppType mode) {
-    Log.v(TAG, "Digital Clock activated in mode: " + mode);
+  protected void onResume() {
+    Log.v(TAG, "Digital Clock activated in mode: " + getCurrentMode());
     
     time = new Time();
     paint = new Paint();
@@ -73,8 +73,8 @@ public class DigitalClock extends CicadaApp {
   }
 
   @Override
-  protected void onDeactivate() {
-    Log.v(TAG, "Digital Clock deactivated");
+  protected void onPause() {
+    Log.v(TAG, "Digital Clock paused");
     handler.removeCallbacks(updateTimeTask);
   }
 

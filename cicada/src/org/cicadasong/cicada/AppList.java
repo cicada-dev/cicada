@@ -79,7 +79,7 @@ public class AppList extends CicadaApp {
   }
 
   @Override
-  protected void onActivate(AppType mode) {
+  protected void onResume() {
     paint = new Paint();
     paint.setTypeface(Typeface.DEFAULT);
     
@@ -109,7 +109,7 @@ public class AppList extends CicadaApp {
   }
 
   @Override
-  protected void onDeactivate() {
+  protected void onPause() {
     unregisterReceiver(receiver);
   }
 

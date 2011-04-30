@@ -51,8 +51,8 @@ public class TubeStatus extends CicadaApp {
   private Handler handler;
 
   @Override
-  protected void onActivate(AppType mode) {
-    Log.v(TAG, "Tube Status activated in mode: " + mode);
+  protected void onResume() {
+    Log.v(TAG, "Tube Status activated in mode: " + getCurrentMode());
 
     if (updateStatusTask == null) {
       updateStatusTask = new Runnable() {
@@ -73,7 +73,7 @@ public class TubeStatus extends CicadaApp {
   }
 
   @Override
-  protected void onDeactivate() {
+  protected void onPause() {
     handler.removeCallbacks(updateStatusTask);
   }
 

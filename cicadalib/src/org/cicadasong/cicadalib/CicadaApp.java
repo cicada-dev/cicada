@@ -54,6 +54,13 @@ public abstract class CicadaApp extends Service {
   // The messenger for communication with CicadaService.
   final Messenger messenger = new Messenger(new IncomingHandler());
 
+  // This is a no-op here, but I'm pulling it up to this level so that it'll be more visible
+  // to people using IDEs.
+  @Override
+  public void onCreate() {
+    super.onCreate();
+  }
+
   @Override
   public void onDestroy() {
     if (isActive) {
@@ -110,16 +117,14 @@ public abstract class CicadaApp extends Service {
   /**
    * Called when this app is activated by CicadaService.  onDraw() will be triggered at the
    * conclusion of this method.
-   * 
-   * @param mode the mode that the app is being activated in
    */
-  protected abstract void onActivate(AppType mode);
+  protected abstract void onResume();
   
   /**
    * Called when this app is deactivated; it should no longer call invalidate() to trigger screen
    * updates past this point.
    */
-  protected abstract void onDeactivate();
+  protected abstract void onPause();
   
   /**
    * Called when one or more device buttons are pressed.
@@ -232,7 +237,7 @@ public abstract class CicadaApp extends Service {
       canvas = null;
     }
     currentMode = mode;
-    onActivate(mode);
+    onResume();
     invalidate();
   }
   
@@ -242,6 +247,6 @@ public abstract class CicadaApp extends Service {
     canvas = null;
     bitmap = null;
     
-    onDeactivate();
+    onPause();
   }
 }
