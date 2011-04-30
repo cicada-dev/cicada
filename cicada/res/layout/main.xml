@@ -12,7 +12,7 @@
     android:layout_gravity="center"
     android:padding="15dp"
     >
-    <org.cicadasong.cicada.SimulatedDisplayView
+    <org.cicadasong.apollo.SimulatedDisplayView
       android:id="@+id/display"
       android:layout_width="192px"
       android:layout_height="192px"

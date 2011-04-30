@@ -15,6 +15,7 @@
 package org.cicadasong.cicada;
 
 import org.cicadasong.apollo.ApolloIntents;
+import org.cicadasong.apollo.SimulatedDisplayView;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;

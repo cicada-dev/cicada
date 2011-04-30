@@ -1,6 +1,5 @@
-package org.cicadasong.cicada;
+package org.cicadasong.apollo;
 
-import org.cicadasong.apollo.BitmapUtil;
 
 import android.content.Context;
 import android.graphics.Bitmap;
