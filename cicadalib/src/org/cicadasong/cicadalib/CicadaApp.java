@@ -143,10 +143,18 @@ public abstract class CicadaApp extends Service {
     return currentMode;
   }
   
+  protected boolean isWidget() {
+    return getCurrentMode() == AppType.WIDGET;
+  }
+  
+  protected boolean isApp() {
+    return getCurrentMode() == AppType.APP;
+  }
+  
   private Canvas getCanvas() {
     if (canvas == null) {
       int height = ApolloConfig.DISPLAY_HEIGHT;
-      if (getCurrentMode() == AppType.WIDGET) {
+      if (isWidget()) {
         height /= 3;
       }
       bitmap = Bitmap.createBitmap(ApolloConfig.DISPLAY_WIDTH, height, Bitmap.Config.RGB_565);
