@@ -87,6 +87,7 @@ public class Cicada extends Activity {
     filter.addAction(CicadaService.INTENT_SERVICE_STARTED);
     filter.addAction(CicadaService.INTENT_SERVICE_STOPPED);
     filter.addAction(ApolloIntents.INTENT_PUSH_BITMAP);
+    filter.addAction(ApolloIntents.INTENT_PUSH_TEXT);
     
     receiver = new BroadcastReceiver() {
       @Override
@@ -95,6 +96,8 @@ public class Cicada extends Activity {
         
         if (intent.getAction().equals(ApolloIntents.INTENT_PUSH_BITMAP)) {
           display.setByteBuffer(intent.getByteArrayExtra(ApolloIntents.EXTRA_BITMAP_BUFFER));
+        } else if (intent.getAction().equals(ApolloIntents.INTENT_PUSH_TEXT)) {
+          display.setText(intent.getStringExtra(ApolloIntents.EXTRA_TEXT));
         } else {
           updateServiceToggleState();
           if (!CicadaService.isRunning()) {
