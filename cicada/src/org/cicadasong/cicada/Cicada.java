@@ -14,6 +14,9 @@
 
 package org.cicadasong.cicada;
 
+import org.cicadasong.apollo.ApolloIntents;
+import org.cicadasong.apollo.BitmapUtil;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -33,12 +36,15 @@ public class Cicada extends Activity {
     
   private BroadcastReceiver receiver;
   private ToggleButton serviceToggle;
+  SimulatedDisplayView display;
   
   /** Called when the activity is first created. */
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
+    
+    display = (SimulatedDisplayView) findViewById(R.id.display);
     
     serviceToggle = (ToggleButton) findViewById(R.id.service_toggle);
     serviceToggle.setOnCheckedChangeListener(new OnCheckedChangeListener() {
@@ -80,12 +86,24 @@ public class Cicada extends Activity {
     IntentFilter filter = new IntentFilter();
     filter.addAction(CicadaService.INTENT_SERVICE_STARTED);
     filter.addAction(CicadaService.INTENT_SERVICE_STOPPED);
+    filter.addAction(ApolloIntents.INTENT_PUSH_BITMAP);
     
     receiver = new BroadcastReceiver() {
       @Override
       public void onReceive(Context context, Intent intent) {
         Log.v(Cicada.TAG, "Received intent: " + intent);
-        updateServiceToggleState();
+        
+        if (intent.getAction().equals(ApolloIntents.INTENT_PUSH_BITMAP)) {
+          byte[] buffer = intent.getByteArrayExtra(ApolloIntents.EXTRA_BITMAP_BUFFER);
+          if (buffer != null) {
+            display.setBitmap(BitmapUtil.bufferToBitmap(buffer));
+          }
+        } else {
+          updateServiceToggleState();
+          if (!CicadaService.isRunning()) {
+            display.clearBitmap();
+          }
+        }
       }
     };
 

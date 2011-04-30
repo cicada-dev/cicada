@@ -58,5 +58,25 @@ public class BitmapUtil {
     }
     return buffer;
   }
+  
+  public static Bitmap bufferToBitmap(byte[] buffer) {
+    Bitmap bitmap = Bitmap.createBitmap(
+        ApolloConfig.DISPLAY_WIDTH, ApolloConfig.DISPLAY_HEIGHT, Bitmap.Config.RGB_565);
+    
+    for (int i = 0; i < buffer.length; i++) {
+      for (int j = 0; j < 8; j++) {
+        int pixelIndex = (i * 8) + j;
+        int x = pixelIndex % ApolloConfig.DISPLAY_WIDTH;
+        int y = pixelIndex / ApolloConfig.DISPLAY_WIDTH;
+        if (((buffer[i] >> j) & 1) == WHITE_PIXEL_BIT) {
+          bitmap.setPixel(x, y, Color.WHITE);
+        } else {
+          bitmap.setPixel(x, y, Color.BLACK);
+        }
+      }
+    }
+    
+    return bitmap;
+  }
 
 }

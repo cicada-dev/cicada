@@ -3,8 +3,24 @@
   android:orientation="vertical"
   android:layout_width="fill_parent"
   android:layout_height="fill_parent"
-  android:paddingTop="20dp"
+  android:paddingTop="10dp"
   >
+  
+  <FrameLayout
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:padding="15dp"
+    >
+    <org.cicadasong.cicada.SimulatedDisplayView
+      android:id="@+id/display"
+      android:layout_width="192px"
+      android:layout_height="192px"
+      android:layout_gravity="center"
+      android:padding="10dp"
+      />
+  </FrameLayout>
+  
   <ToggleButton
     android:id="@+id/service_toggle"
     android:layout_width="wrap_content"
