@@ -52,13 +52,14 @@ public class NextBuses extends CicadaApp {
   public static final int STATUS_UPDATE_INTERVAL_MSEC = 2 * 60 * 1000;
 
   private String stopName = "3rd St & Howard St";
-  private String status = "Fetching...";
   private Runnable updateStatusTask;
   private Handler handler;
+  private PredictionSet predictions = null;
+  private boolean inInitialFetch = true;
 
   @Override
   protected void onActivate(AppType mode) {
-    Log.v(TAG, "Tube Status activated in mode: " + mode);
+    Log.v(TAG, "Next Buses activated in mode: " + mode);
 
     if (updateStatusTask == null) {
       updateStatusTask = new Runnable() {
@@ -85,68 +86,92 @@ public class NextBuses extends CicadaApp {
 
   @Override
   protected void onButtonPress(ButtonEvent buttonEvent) {
-    Log.v(TAG, "Tube Status deactivated");
   }
 
   protected void onDraw(Canvas canvas) {
     Paint paint = new Paint();
-    paint.setTextAlign(Paint.Align.CENTER);
-    paint.setTypeface(Typeface.DEFAULT_BOLD);
-    
-    // We've centered the output vertically, so it works with the reduced canvas height in
-    // widget mode.
-    int y = canvas.getHeight() / 2;
-    int x = canvas.getWidth() / 2;
-
+    paint.setTextAlign(Paint.Align.LEFT);
     paint.setTypeface(Typeface.DEFAULT);
     paint.setTextSize(11);
+    
+    int x = 2;
+    int y = isWidget() ? canvas.getHeight() / 2 : (int) paint.getFontSpacing() + 2;
+
     canvas.drawText(stopName, x, y - paint.descent() - 1, paint);
 
     paint.setTextAlign(Paint.Align.LEFT);
-    x = 2;
     paint.setTextSize(10);
-    canvas.drawText(status, x, y + (int)-paint.ascent() + 1, paint);
+    x = 2;
+    y += (int)-paint.ascent() + 1;
+    
+    if (inInitialFetch) {
+      canvas.drawText("Fetching...", x, y, paint);
+    } else if (predictions == null) {
+      canvas.drawText("Network Error", x, y, paint);
+    } else if (isWidget()) {
+      String singleLineResult = "";
+      List<Prediction> allPredictions = predictions.getAllPredictions();
+      StringBuilder resultBuilder = new StringBuilder();
+      for (Prediction prediction : allPredictions) {
+        if (resultBuilder.length() > 0) {
+          resultBuilder.append(" ");
+        }
+        resultBuilder.append(prediction.route);
+        resultBuilder.append("~");
+        resultBuilder.append(prediction.minutes);
+        resultBuilder.append("m");
+      }
+      singleLineResult = resultBuilder.toString();
+      canvas.drawText(singleLineResult, x, y, paint);
+    } else {
+      // We're in app mode, so we have more screen space to work with
+      for (String route : predictions.getRoutes()) {
+        StringBuilder resultBuilder = new StringBuilder();
+        resultBuilder.append(route);
+        resultBuilder.append(":");
+        for (Prediction prediction : predictions.getPredictionsForRoute(route)) {
+          resultBuilder.append(" ");
+          resultBuilder.append(prediction.minutes);
+          resultBuilder.append("m");
+        }
+        canvas.drawText(resultBuilder.toString(), x, y, paint);
+        y += paint.getFontSpacing();
+      }
+    }
   }
 
-  private void processStatusUpdate(String newStatus) {
+  private void processStatusUpdate(PredictionSet newPredictions) {
     if (!isActive()) {
       return;
     }
-
-    if (newStatus.equalsIgnoreCase("Good Service")) {
-      status = "Good Service";
-    } else if (newStatus.equalsIgnoreCase("Minor Delays")) {
-      status = "Minor Delays";
-    } else if (newStatus.equalsIgnoreCase("Part Closure")) {
-      status = "Part Closure";
-    } else if (newStatus.equalsIgnoreCase("Suspended")) {
-      status = "Suspended";
-    } else {
-      status = newStatus;
-    }
+    
+    inInitialFetch = false;
+    predictions = newPredictions;
 
     invalidate();
 
     handler.postDelayed(updateStatusTask, STATUS_UPDATE_INTERVAL_MSEC);
   }
 
-  private class GetTimesTask extends AsyncTask<Void, Void, String> {
+  private class GetTimesTask extends AsyncTask<Void, Void, PredictionSet> {
     private static final String STOP_URL =
         "http://proximobus.appspot.com/agencies/sf-muni/stops/13128/predictions.json";
-    protected void onPostExecute(String result) {
+    @Override
+    protected void onPostExecute(PredictionSet result) {
       processStatusUpdate(result);
     }
+    
     @Override
-    protected String doInBackground(Void... params) {
-      String result = "Network Error";
+    protected PredictionSet doInBackground(Void... params) {
       HttpURLConnection connection = null;
-      PredictionSet resultSet = new PredictionSet();
+      PredictionSet resultSet = null;
       try {
         URL url = new URL(STOP_URL);
         connection = (HttpURLConnection) url.openConnection();
         if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
           String response = convertStreamToString(connection.getInputStream());
           try {
+            resultSet = new PredictionSet();
             JSONObject responseObj = new JSONObject(response);
             JSONArray predArray = responseObj.getJSONArray("items");
             for (int i = 0; i < predArray.length(); i++) {
@@ -154,17 +179,6 @@ public class NextBuses extends CicadaApp {
               resultSet.addPrediction(predObj.getString("route_id"), predObj.getInt("minutes"));
             }
             
-            List<Prediction> allPredictions = resultSet.getAllPredictions();
-            StringBuilder resultBuilder = new StringBuilder();
-            for (Prediction prediction : allPredictions) {
-              if (resultBuilder.length() > 0) {
-                resultBuilder.append(" ");
-              }
-              resultBuilder.append(prediction.route);
-              resultBuilder.append(":");
-              resultBuilder.append(prediction.minutes);
-            }
-            result = resultBuilder.toString();
           } catch (JSONException e) {
             Log.e(TAG, "Error decoding response: " + response);
           }
@@ -179,7 +193,7 @@ public class NextBuses extends CicadaApp {
         }
       }
 
-      return result;
+      return resultSet;
     }
   }
 
