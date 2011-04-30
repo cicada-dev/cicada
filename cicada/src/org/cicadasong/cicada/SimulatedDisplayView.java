@@ -1,5 +1,7 @@
 package org.cicadasong.cicada;
 
+import org.cicadasong.apollo.BitmapUtil;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -14,9 +16,15 @@ public class SimulatedDisplayView extends View {
     super(context, attrs);
   }
 
-  public void clearBitmap() {
+  public void clearDisplay() {
     bitmap = null;
     invalidate();
+  }
+  
+  public void setByteBuffer(byte[] buffer) {
+    if (buffer != null) {
+      setBitmap(BitmapUtil.bufferToBitmap(buffer));
+    }
   }
   
 	public void setBitmap(Bitmap srcBitmap) {

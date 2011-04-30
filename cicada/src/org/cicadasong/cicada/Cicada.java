@@ -15,7 +15,6 @@
 package org.cicadasong.cicada;
 
 import org.cicadasong.apollo.ApolloIntents;
-import org.cicadasong.apollo.BitmapUtil;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -94,14 +93,11 @@ public class Cicada extends Activity {
         Log.v(Cicada.TAG, "Received intent: " + intent);
         
         if (intent.getAction().equals(ApolloIntents.INTENT_PUSH_BITMAP)) {
-          byte[] buffer = intent.getByteArrayExtra(ApolloIntents.EXTRA_BITMAP_BUFFER);
-          if (buffer != null) {
-            display.setBitmap(BitmapUtil.bufferToBitmap(buffer));
-          }
+          display.setByteBuffer(intent.getByteArrayExtra(ApolloIntents.EXTRA_BITMAP_BUFFER));
         } else {
           updateServiceToggleState();
           if (!CicadaService.isRunning()) {
-            display.clearBitmap();
+            display.clearDisplay();
           }
         }
       }
