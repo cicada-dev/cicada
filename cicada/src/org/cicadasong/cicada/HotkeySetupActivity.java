@@ -83,7 +83,7 @@ public class HotkeySetupActivity extends Activity {
     db.close();
     
     ArrayAdapter<AppDescription> appsAdapter =
-        new ArrayAdapter<AppDescription>(this, android.R.layout.simple_spinner_item, apps);
+        new ArrayAdapter<AppDescription>(this, R.layout.spinner_item, apps);
     
     spinners = new Spinner[NUM_CONFIGURABLE_BUTTONS];
     for (int i = 0; i < spinners.length; i++) {

@@ -70,7 +70,7 @@ public class WidgetSetup extends Activity {
     db.close();
     
     ArrayAdapter<AppDescription> widgetAdapter =
-        new ArrayAdapter<AppDescription>(this, android.R.layout.simple_spinner_item, widgets);
+        new ArrayAdapter<AppDescription>(this, R.layout.spinner_item, widgets);
     
     spinners = new Spinner[WidgetScreen.NUM_WIDGETS];
     for (int i = 0; i < spinners.length; i++) {
