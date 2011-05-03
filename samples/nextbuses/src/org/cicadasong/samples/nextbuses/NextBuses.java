@@ -125,19 +125,27 @@ public class NextBuses extends CicadaApp {
   }
 
   protected void onDraw(Canvas canvas) {
-    // Set initial font for heading
-    Paint paint = isWidget() ? metawatch7px : metawatch11px;
-    
+    // Set font for heading
+    Paint paint = isWidget() ? metawatch5px : metawatch7px;
+
     int x = 2;
-    int y = isWidget() ? canvas.getHeight() / 2 : (int) paint.getFontSpacing() + 2;
+    int y = 2 + (int) -paint.ascent();
     
-    canvas.drawText(stopName, x, y - paint.descent() - 1, paint);
+    canvas.drawText("Next buses at...", x, y, paint);
+    
+    y += (int) paint.descent() + 2;
+
+    // Set font for stop name
+    paint = isWidget() ? metawatch7px : metawatch11px;
+    y += (int) -paint.ascent();
+    
+    canvas.drawText(stopName, x, y, paint);
+    
+    y += (int) paint.descent() + 2;
 
     // Set font for "body"
     paint = isWidget() ? metawatch5px : default10pt;
-    
-    x = 2;
-    y += (int)-paint.ascent() + 1;
+    y += (int) -paint.ascent();
     
     if (inInitialFetch) {
       canvas.drawText("Fetching...", x, y, paint);
