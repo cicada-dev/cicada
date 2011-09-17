@@ -70,8 +70,7 @@ public class CicadaService extends Service {
     IntentFilter filter = new IntentFilter();
     filter.addAction(CicadaIntents.INTENT_PUSH_CANVAS);
     filter.addAction(CicadaIntents.INTENT_VIBRATE);
-    filter.addAction(ApolloIntents.INTENT_IDLE_BUTTON_PRESS);
-    filter.addAction(ApolloIntents.INTENT_APP_BUTTON_PRESS);
+    filter.addAction(ApolloIntents.INTENT_BUTTON_PRESS);
     filter.addAction(HotkeySetupActivity.INTENT_HOTKEYS_CHANGED);
     filter.addAction(WidgetSetup.INTENT_WIDGETS_CHANGED);
     filter.addAction(INTENT_LAUNCH_APP);
@@ -138,8 +137,7 @@ public class CicadaService extends Service {
           newIntent.putExtra(ApolloIntents.EXTRA_VIBRATE_OFF_MSEC, offMillis);
           newIntent.putExtra(ApolloIntents.EXTRA_VIBRATE_NUM_CYCLES, numCycles);
           sendBroadcast(newIntent);
-        } else if (intent.getAction().equals(ApolloIntents.INTENT_IDLE_BUTTON_PRESS) ||
-             intent.getAction().equals(ApolloIntents.INTENT_APP_BUTTON_PRESS)) {
+        } else if (intent.getAction().equals(ApolloIntents.INTENT_BUTTON_PRESS)) {
           ButtonPress buttonPress = ApolloIntents.ButtonPress.parseIntent(intent);
           if (buttonPress != null) {
             byte buttons = intent.getByteExtra(ApolloIntents.EXTRA_BUTTONS, (byte) 0);

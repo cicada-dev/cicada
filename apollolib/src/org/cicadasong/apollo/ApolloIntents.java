@@ -25,14 +25,14 @@ import android.graphics.Bitmap;
  */
 
 public class ApolloIntents {
-  public static final String INTENT_IDLE_BUTTON_PRESS =
-      "com.smartmadsoft.openwatch.apollo.command.IDLE_BUTTON_PRESS";
-  public static final String INTENT_APP_BUTTON_PRESS =
-    "com.smartmadsoft.openwatch.apollo.command.APPLICATION_BUTTON_PRESS";
+  public static final String TAG = "ApolloIntents";
+  
+  public static final String INTENT_BUTTON_PRESS = "com.fossil.metawatch.BUTTON_PRESS";
   public static final String EXTRA_BUTTONS = "button";
+  public static final String EXTRA_MODE = "mode";  // "application" or "idle"
   
   public static final String INTENT_PUSH_BITMAP =
-      "com.smartmadsoft.openwatch.apollo.action.APPLICATION_MODE_GRAPHICS";
+      "com.fossil.metawatch.APPLICATION_UPDATE";
   public static final String EXTRA_BITMAP_ARRAY = "data";
   public static final String EXTRA_BITMAP_BUFFER = "buffer";
   
@@ -45,9 +45,15 @@ public class ApolloIntents {
   public static final String EXTRA_VIBRATE_OFF_MSEC = "off";
   public static final String EXTRA_VIBRATE_NUM_CYCLES = "cycles";
   
-  public static final String INTENT_SET_APPLICATION_MODE =
-      "com.smartmadsoft.openwatch.apollo.action.APPLICATION_MODE";
-  public static final String EXTRA_ENABLED = "enabled";
+  public static final String INTENT_START_APPLICATION_MODE =
+      "com.fossil.metawatch.APPLICATION_START";
+  
+  public static final String INTENT_STOP_APPLICATION_MODE =
+       "com.fossil.metawatch.APPLICATION_STOP";
+  
+  public static final String INTENT_IDLE_BUTTONS_OVERRIDE =
+      "com.fossil.metawatch.IDLE_BUTTONS_OVERRIDE";
+  public static final String EXTRA_OVERRIDE_BUTTONS = "buttons";
   
   private ApolloIntents() {
   }
@@ -81,8 +87,8 @@ public class ApolloIntents {
   }
   
   public static void setApplicationMode(Context context, boolean enabled) {
-    Intent intent = new Intent(INTENT_SET_APPLICATION_MODE);
-    intent.putExtra(EXTRA_ENABLED, enabled);
+    Intent intent = new Intent(enabled ?
+        INTENT_START_APPLICATION_MODE : INTENT_STOP_APPLICATION_MODE);
     context.sendBroadcast(intent);
   }
   
@@ -94,8 +100,7 @@ public class ApolloIntents {
     }
     
     public static ButtonPress parseIntent(Intent intent) {
-      if (!intent.getAction().equals(INTENT_IDLE_BUTTON_PRESS) &&
-          !intent.getAction().equals(INTENT_APP_BUTTON_PRESS)) {
+      if (!intent.getAction().equals(INTENT_BUTTON_PRESS)) {
         return null;
       }
       if (!intent.hasExtra(EXTRA_BUTTONS)) {

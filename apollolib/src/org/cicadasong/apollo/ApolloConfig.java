@@ -23,12 +23,12 @@ public class ApolloConfig {
   public static final int DISPLAY_HEIGHT = 96;
   
   public enum Button {
-    TOP_RIGHT    ((byte) 1),
-    MIDDLE_RIGHT ((byte) 2),
-    BOTTOM_RIGHT ((byte) 4),
-    TOP_LEFT     ((byte) 64),
-    MIDDLE_LEFT  ((byte) 32),
-    BOTTOM_LEFT  ((byte) 8);
+    TOP_RIGHT    ((byte) 0),
+    MIDDLE_RIGHT ((byte) 1),
+    BOTTOM_RIGHT ((byte) 2),
+    TOP_LEFT     ((byte) 6),
+    MIDDLE_LEFT  ((byte) 5),
+    BOTTOM_LEFT  ((byte) 3);
     
     private final byte value;
     

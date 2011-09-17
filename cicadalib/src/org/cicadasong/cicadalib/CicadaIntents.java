@@ -34,12 +34,12 @@ public class CicadaIntents {
   public static final String EXTRA_VIBRATE_NUM_CYCLES = "cycles";
   
   public enum Button {
-    TOP_RIGHT    ((byte) 1),
-    MIDDLE_RIGHT ((byte) 2),
-    BOTTOM_RIGHT ((byte) 4),
-    TOP_LEFT     ((byte) 64),
-    MIDDLE_LEFT  ((byte) 32),
-    BOTTOM_LEFT  ((byte) 8);
+    TOP_RIGHT    ((byte) 0),
+    MIDDLE_RIGHT ((byte) 1),
+    BOTTOM_RIGHT ((byte) 2),
+    TOP_LEFT     ((byte) 6),
+    MIDDLE_LEFT  ((byte) 5),
+    BOTTOM_LEFT  ((byte) 3);
     
     private final byte value;
     
@@ -59,30 +59,16 @@ public class CicadaIntents {
       this.pressedButtons = pressedButtons;
     }
     
-    private static byte bitfieldFromButtons(Button... buttons) {
-      byte bitfield = (byte) 0;
-      for (Button button : buttons) {
-        bitfield |= button.value();
-      }
-      return bitfield;
-    }
-    
-    /**
-     * Returns true if the given buttons are pressed in this event.  (Other buttons may also
-     * be pressed at the same time.)  Returns false if some of the given buttons are not
-     * current pressed.
-     */
-    public boolean hasButtonsPressedNonExclusive(Button... buttons) {
-      return (pressedButtons & bitfieldFromButtons(buttons)) != 0;
-    }
-    
     /**
      * Returns true if the given buttons are pressed in the current event.  This method will return
      * false if buttons not named in the parameter are also pressed; if you don't care about the
      * state of the other buttons, use hasButtonsPressedNonExclusive() instead.
      */
     public boolean hasButtonsPressed(Button... buttons) {
-      return pressedButtons == bitfieldFromButtons(buttons);
+      if (buttons.length > 1) {
+        return false;
+      }
+      return buttons[0].value() == pressedButtons;
     }
   }
 }
