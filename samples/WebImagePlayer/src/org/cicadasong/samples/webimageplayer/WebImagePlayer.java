@@ -8,29 +8,30 @@ import java.net.URL;
 import org.cicadasong.cicadalib.CicadaApp;
 import org.cicadasong.cicadalib.CicadaIntents.ButtonEvent;
 
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.Log;
 
-public class WebImagePlayer extends CicadaApp {
+public class WebImagePlayer extends CicadaApp implements OnSharedPreferenceChangeListener {
   public static final String TAG = WebImagePlayer.class.getSimpleName();
-
-  // Update interval and image URL
-  // TODO: Make these preferences so that they can be easily tweaked.
-  public static final int STATUS_UPDATE_INTERVAL_MSEC = 600 * 1000;
-  public static final String IMAGE_URL = "https://github.com/" +
-      "cicada-dev/cicada/raw/master/samples/hellocicada/res/drawable-hdpi/cicada.png";
 
   private Bitmap downloadedImage = null;
   
   private Runnable updateStatusTask;
   private Handler handler;
   private Paint paint;
+  private String imageUrl;
+  private int updateIntervalMsec;
+  private boolean dither;
   
   @Override
   public void onCreate() {
@@ -43,6 +44,8 @@ public class WebImagePlayer extends CicadaApp {
   protected void onResume() {
     Log.v(TAG, "WebImagePlayer activated in mode: " + getCurrentMode());
 
+    Preferences.getSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
+    readPreferences();
     if (updateStatusTask == null) {
       updateStatusTask = new Runnable() {
 
@@ -50,7 +53,7 @@ public class WebImagePlayer extends CicadaApp {
         public void run() {
           if (!isActive()) return;
 
-          (new GetTimesTask()).execute();
+          (new GetTimesTask()).execute(imageUrl);
         }
       };
     }
@@ -61,8 +64,15 @@ public class WebImagePlayer extends CicadaApp {
     handler.post(updateStatusTask);
   }
 
+  private void readPreferences() {
+    imageUrl = Preferences.getImageUrl(this);
+    updateIntervalMsec = Preferences.getUpdateFrequency(this) * 1000;
+    dither = Preferences.getDithering(this);
+  }
+
   @Override
   protected void onPause() {
+    Preferences.getSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
     handler.removeCallbacks(updateStatusTask);
   }
 
@@ -70,11 +80,18 @@ public class WebImagePlayer extends CicadaApp {
   protected void onButtonPress(ButtonEvent buttonEvent) {
   }
 
+  @Override
+  public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+    readPreferences();
+    handler.removeCallbacks(updateStatusTask);
+    handler.post(updateStatusTask);
+  }
+
   protected void onDraw(Canvas canvas) {
     if (downloadedImage != null) {
       Rect src = new Rect(0, 0, downloadedImage.getWidth(), downloadedImage.getHeight());
       Rect canvasBounds = canvas.getClipBounds();
-      Rect dst = canvasBounds;
+      Rect dst = new Rect(canvasBounds);
       
       // Scale & center image to fit the display
       boolean tall = downloadedImage.getWidth() < downloadedImage.getHeight();
@@ -89,7 +106,25 @@ public class WebImagePlayer extends CicadaApp {
         dst.top = (canvasBounds.height() - height) / 2;
         dst.bottom = dst.top + height;
       }
-      canvas.drawBitmap(downloadedImage, src, dst, paint);
+      
+      if (!dither) {
+        canvas.drawBitmap(downloadedImage, src, dst, paint);
+      } else {
+        Bitmap scaledBitmap = Bitmap.createBitmap(
+            canvasBounds.width(), canvasBounds.height(), Bitmap.Config.ARGB_8888);
+        Canvas scaledCanvas = new Canvas(scaledBitmap);
+        
+        Paint paint = new Paint();
+        ColorMatrix cm = new ColorMatrix();
+        cm.setSaturation(0);
+        ColorMatrixColorFilter f = new ColorMatrixColorFilter(cm);
+        paint.setColorFilter(f);
+        scaledCanvas.drawBitmap(downloadedImage, src, dst, paint);
+        
+        // TODO: Implement dithering
+        
+        canvas.drawBitmap(scaledBitmap, 0, 0, paint);
+      }
     }
     return;
   }
@@ -105,21 +140,22 @@ public class WebImagePlayer extends CicadaApp {
       invalidate();
     }
 
-    handler.postDelayed(updateStatusTask, STATUS_UPDATE_INTERVAL_MSEC);
+    handler.postDelayed(updateStatusTask, updateIntervalMsec);
   }
 
-  private class GetTimesTask extends AsyncTask<Void, Void, Bitmap> {
+  private class GetTimesTask extends AsyncTask<String, Void, Bitmap> {
     @Override
     protected void onPostExecute(Bitmap result) {
       processStatusUpdate(result);
     }
     
     @Override
-    protected Bitmap doInBackground(Void... params) {
+    protected Bitmap doInBackground(String... params) {
       HttpURLConnection connection = null;
       Bitmap bitmap = null;
+      String imageUrlString = params[0];
       try {
-        URL url = new URL(IMAGE_URL);
+        URL url = new URL(imageUrlString);
         connection = (HttpURLConnection) url.openConnection();
         if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
           bitmap = BitmapFactory.decodeStream(connection.getInputStream());
@@ -134,7 +170,7 @@ public class WebImagePlayer extends CicadaApp {
         }
       }
 
-      Log.v(TAG, "Image fetch for URL " + IMAGE_URL + " yielded " + bitmap);
+      Log.v(TAG, "Image fetch for URL " + imageUrlString + " yielded " + bitmap);
       return bitmap;
     }
   }

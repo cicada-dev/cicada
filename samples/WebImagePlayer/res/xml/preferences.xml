@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+  <EditTextPreference
+    android:key="ImageUrl"
+    android:title="Image URL"
+    android:defaultValue="@string/default_image_url"
+    />
+   
+  <EditTextPreference
+    android:key="UpdateFrequency"
+    android:title="Update Frequency (seconds)"
+    android:defaultValue="@string/default_update_frequency"
+    />
+   
+  <CheckBoxPreference
+    android:key="UseDithering"
+    android:title="Dither Image"
+    />
+</PreferenceScreen>

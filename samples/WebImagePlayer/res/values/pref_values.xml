@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="default_image_url">https://github.com/cicada-dev/cicada/raw/master/samples/hellocicada/res/drawable-hdpi/cicada.png</string>
+    <string name="default_update_frequency">60</string>
+</resources>

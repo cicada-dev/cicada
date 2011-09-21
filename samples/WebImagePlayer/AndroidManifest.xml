@@ -13,6 +13,14 @@
             <meta-data android:name="org.cicadasong.cicada.apptype"
                        android:value="APP" />
         </service> 
+        <activity android:name=".WebImagePlayerSettingsActivity"
+                  android:label="@string/setup_name"
+                  android:configChanges="keyboardHidden|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
     </application>
 </manifest>
