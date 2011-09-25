@@ -301,7 +301,7 @@ public class CicadaService extends Service {
     String notificationTitle = getString(R.string.notification_title);
     String notificationBody = getString(R.string.notification_body);
 
-    Notification notification = new Notification(R.drawable.icon, notificationTitle, 0);
+    Notification notification = new Notification(R.drawable.statusbar, notificationTitle, 0);
 
     // The PendingIntent to launch our activity if the user selects this notification
     PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
