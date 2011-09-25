@@ -6,7 +6,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.cicadasong.cicadalib.CicadaApp;
-import org.cicadasong.cicadalib.CicadaIntents.ButtonEvent;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -77,7 +76,7 @@ public class WebImagePlayer extends CicadaApp implements OnSharedPreferenceChang
   }
 
   @Override
-  protected void onButtonPress(ButtonEvent buttonEvent) {
+  protected void onButtonPress(WatchButton button) {
   }
 
   @Override

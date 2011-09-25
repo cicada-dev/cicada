@@ -16,7 +16,6 @@ package org.cicadasong.cicadalib;
 
 import org.cicadasong.apollo.ApolloConfig;
 import org.cicadasong.apollo.BitmapUtil;
-import org.cicadasong.cicadalib.CicadaIntents.ButtonEvent;
 
 import android.app.Service;
 import android.content.Intent;
@@ -42,6 +41,35 @@ public abstract class CicadaApp extends Service {
     WIDGET,
     APP,
     WIDGET_AND_APP
+  }
+  
+  public enum WatchButton {
+    NO_BUTTON    ((byte) -1),
+    TOP_RIGHT    ((byte) 0),
+    MIDDLE_RIGHT ((byte) 1),
+    BOTTOM_RIGHT ((byte) 2),
+    TOP_LEFT     ((byte) 6),
+    MIDDLE_LEFT  ((byte) 5),
+    BOTTOM_LEFT  ((byte) 3);
+    
+    private final byte value;
+    
+    private WatchButton(byte value) {
+      this.value = value;
+    }
+    
+    public byte value() {
+      return value;
+    }
+    
+    public static WatchButton valueOf(int arg1) {
+      for (WatchButton possibleButton : WatchButton.values()) {
+        if (possibleButton.value == arg1) {
+          return possibleButton;
+        }
+      }
+      return NO_BUTTON;
+    }
   }
   
   // Received from Cicada
@@ -99,8 +127,7 @@ public abstract class CicadaApp extends Service {
         break;
         
       case MESSAGETYPE_BUTTON_EVENT:
-        ButtonEvent event = new ButtonEvent((byte) msg.arg1);
-        onButtonPress(event);
+        onButtonPress(WatchButton.valueOf(msg.arg1));
         break;
 
       default:
@@ -136,11 +163,11 @@ public abstract class CicadaApp extends Service {
   protected abstract void onPause();
   
   /**
-   * Called when one or more device buttons are pressed.
+   * Called when one of the watch buttons is pressed while this app is active.
    * 
-   * @param buttonEvent indicates the buttons that were pressed.
+   * @param button indicates which watch button was pressed.
    */
-  protected abstract void onButtonPress(ButtonEvent buttonEvent);
+  protected abstract void onButtonPress(WatchButton button);
   
   /**
    * Called when the app needs to render its screen contents.  This method should not be called
@@ -153,9 +180,14 @@ public abstract class CicadaApp extends Service {
    */
   protected abstract void onDraw(Canvas canvas);
   
+  /**
+   * @return Either AppType.APP if this app currently has the entire watch screen,
+   *         or AppType.Widget if this app only has 1/3 of the watch screen.
+   */
   protected AppType getCurrentMode() {
     return currentMode;
   }
+  
   
   protected boolean isWidget() {
     return getCurrentMode() == AppType.WIDGET;
@@ -276,3 +308,4 @@ public abstract class CicadaApp extends Service {
     onPause();
   }
 }
+

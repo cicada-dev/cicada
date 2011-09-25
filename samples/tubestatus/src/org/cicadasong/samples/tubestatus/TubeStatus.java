@@ -23,7 +23,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.cicadasong.cicadalib.CicadaApp;
-import org.cicadasong.cicadalib.CicadaIntents.ButtonEvent;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -78,8 +77,7 @@ public class TubeStatus extends CicadaApp {
   }
 
   @Override
-  protected void onButtonPress(ButtonEvent buttonEvent) {
-    Log.v(TAG, "Tube Status deactivated");
+  protected void onButtonPress(WatchButton button) {
   }
 
   protected void onDraw(Canvas canvas) {

@@ -551,6 +551,7 @@ public class CicadaService extends Service {
     }
     
     public void sendButtonEvent(byte buttons) {
+      // On the other end, CicadaApp-derived apps will be expecting a WatchButton enum value.
       Message buttonMessage =
         Message.obtain(null, CicadaApp.MESSAGETYPE_BUTTON_EVENT, buttons, 0);
       sendMessage(buttonMessage);

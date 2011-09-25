@@ -15,8 +15,6 @@
 package org.cicadasong.samples.digitalclock;
 
 import org.cicadasong.cicadalib.CicadaApp;
-import org.cicadasong.cicadalib.CicadaIntents.Button;
-import org.cicadasong.cicadalib.CicadaIntents.ButtonEvent;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -79,11 +77,13 @@ public class DigitalClock extends CicadaApp {
   }
 
   @Override
-  protected void onButtonPress(ButtonEvent buttons) {
-    if (buttons.hasButtonsPressed(Button.MIDDLE_RIGHT)) {
-      is24Hour = !is24Hour;  // Simple time format toggle to demonstrate button handling.
-      invalidate();  // Don't forget to redraw after a button event that changes the app state!
-      vibrate(200, 0, 1);  // Just to demonstrate vibration
+  protected void onButtonPress(WatchButton button) {
+    switch (button) {
+      case MIDDLE_RIGHT:
+        is24Hour = !is24Hour;  // Simple time format toggle to demonstrate button handling.
+        invalidate();  // Don't forget to redraw after a button event that changes the app state!
+        vibrate(200, 0, 1);  // Just to demonstrate vibration
+        break;
     }
   }
   

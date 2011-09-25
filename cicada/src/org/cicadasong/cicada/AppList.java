@@ -17,8 +17,6 @@ package org.cicadasong.cicada;
 import java.util.List;
 
 import org.cicadasong.cicadalib.CicadaApp;
-import org.cicadasong.cicadalib.CicadaIntents;
-import org.cicadasong.cicadalib.CicadaIntents.ButtonEvent;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -116,16 +114,24 @@ public class AppList extends CicadaApp {
   }
 
   @Override
-  protected void onButtonPress(ButtonEvent buttonEvent) {
-    if (buttonEvent.hasButtonsPressed(CicadaIntents.Button.TOP_RIGHT)) {
-      changeSelection(selectedIndex - 1);
-    } else if (buttonEvent.hasButtonsPressed(CicadaIntents.Button.BOTTOM_RIGHT)) {
-      changeSelection(selectedIndex + 1);
-    } else if (buttonEvent.hasButtonsPressed(CicadaIntents.Button.MIDDLE_RIGHT)) {
-      launchSelectedApp();
-    } else if (buttonEvent.hasButtonsPressed(CicadaIntents.Button.TOP_LEFT)) {
-      // Most Cicada apps can't trap the top left button, but it's reserved for AppList so we can.
-      changeSelection(0);
+  protected void onButtonPress(WatchButton button) {
+    switch (button) {
+      case TOP_RIGHT:
+        changeSelection(selectedIndex - 1);
+        break;
+        
+      case BOTTOM_RIGHT:
+        changeSelection(selectedIndex + 1);
+        break;
+        
+      case MIDDLE_RIGHT:
+        launchSelectedApp();
+        break;
+        
+      case TOP_LEFT:
+        // Most Cicada apps can't trap the top left button, but it's reserved for AppList so we can.
+        changeSelection(0);
+        break;
     }
   }
   

@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.cicadasong.cicadalib.CicadaApp;
-import org.cicadasong.cicadalib.CicadaIntents.ButtonEvent;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -130,7 +129,7 @@ public class Notifications extends CicadaApp {
   }
 
   @Override
-  protected void onButtonPress(ButtonEvent buttonEvent) {
+  protected void onButtonPress(WatchButton button) {
   }
 
   @Override

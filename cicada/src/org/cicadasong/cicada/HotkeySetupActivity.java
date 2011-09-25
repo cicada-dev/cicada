@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.cicadasong.cicadalib.CicadaApp;
 import org.cicadasong.cicadalib.CicadaApp.AppType;
 import org.cicadasong.cicadalib.CicadaIntents;
 
@@ -46,9 +47,9 @@ public class HotkeySetupActivity extends Activity {
   public static final int BOTTOM_RIGHT_BUTTON = 2;
   
   private static final byte[] BUTTON_MASK = {
-    CicadaIntents.Button.MIDDLE_LEFT.value(),
-    CicadaIntents.Button.MIDDLE_RIGHT.value(),
-    CicadaIntents.Button.BOTTOM_RIGHT.value(),
+    CicadaApp.WatchButton.MIDDLE_LEFT.value(),
+    CicadaApp.WatchButton.MIDDLE_RIGHT.value(),
+    CicadaApp.WatchButton.BOTTOM_RIGHT.value(),
   };
   
   public static final int NUM_CONFIGURABLE_BUTTONS = BUTTON_MASK.length;

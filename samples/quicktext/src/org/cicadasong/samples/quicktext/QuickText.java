@@ -15,8 +15,6 @@
 package org.cicadasong.samples.quicktext;
 
 import org.cicadasong.cicadalib.CicadaApp;
-import org.cicadasong.cicadalib.CicadaIntents.Button;
-import org.cicadasong.cicadalib.CicadaIntents.ButtonEvent;
 
 import android.app.Activity;
 import android.app.PendingIntent;
@@ -112,15 +110,16 @@ public class QuickText extends CicadaApp {
   }
 
   @Override
-  protected void onButtonPress(ButtonEvent buttonEvent) {
-    if (buttonEvent.hasButtonsPressed(Button.BOTTOM_RIGHT)) {
-      if (state == State.READY_TO_SEND) {
-        sendText();
-      } else if (state == State.GOT_SEND_RESULT) {
-        backToReady();
-      } else if (state == State.NEED_CONFIGURATION) {
-        launchSetup();
-      }
+  protected void onButtonPress(WatchButton button) {
+    switch (button) {
+      case BOTTOM_RIGHT:
+        if (state == State.READY_TO_SEND) {
+          sendText();
+        } else if (state == State.GOT_SEND_RESULT) {
+          backToReady();
+        } else if (state == State.NEED_CONFIGURATION) {
+          launchSetup();
+        }
     }
   }
   

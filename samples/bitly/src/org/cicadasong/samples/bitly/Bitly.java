@@ -9,7 +9,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.cicadasong.cicadalib.CicadaApp;
-import org.cicadasong.cicadalib.CicadaIntents.ButtonEvent;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -105,7 +104,7 @@ public class Bitly extends CicadaApp {
   }
 
   @Override
-  protected void onButtonPress(ButtonEvent buttonEvent) {
+  protected void onButtonPress(WatchButton button) {
   }
 
   protected void onDraw(Canvas canvas) {
