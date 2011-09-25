@@ -16,7 +16,7 @@
     <string name="waiting_for_idle_screen">Waiting for\nidle screen\nto update...</string>
     
     <!-- Displayed in the service's ongoing notification -->
-    <string name="notification_title">Cicada is active</string>
+    <string name="notification_title">Cicada is connected to your MetaWatch</string>
     <string name="notification_body">Select to configure or stop Cicada.</string>
     
     <!-- Widget Setup -->
