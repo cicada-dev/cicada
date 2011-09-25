@@ -21,7 +21,8 @@ public class DeviceService extends Service {
   public static final int MESSAGETYPE_DEACTIVATE = 2;
   public static final int MESSAGETYPE_BUTTON_EVENT = 3;
   
-  public static final String MAC = "C0:E4:22:86:70:A3";
+  public static final String MAC = "C0:E4:22:86:70:A3";  // TODO: Make pref & autodetect
+  
   // The "well-known" UUID that the Android docs recommend using for SPP.
   public static final UUID SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
@@ -97,6 +98,7 @@ public class DeviceService extends Service {
       socket.connect();
       connection = new MetaWatchConnection(socket, listener);
       sendConnectionNotice();
+      connection.configureWatchMode(MetaWatchConnection.MODE_APPLICATION, 255, false);
       connection.setNativeClockVisible(false);
       connection.vibrate(500, 0, 1);  // 01 0c 23 00 01 f4 01 00 00 01 ee 00 
     } catch (IOException e) {

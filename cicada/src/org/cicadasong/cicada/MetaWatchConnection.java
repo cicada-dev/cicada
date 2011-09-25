@@ -3,16 +3,10 @@ package org.cicadasong.cicada;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Array;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.cicadasong.apollo.ApolloConfig;
 import org.cicadasong.apollo.ApolloIntents;
 import org.cicadasong.apollo.ApolloIntents.ButtonPress;
-import org.cicadasong.cicadalib.CicadaIntents.ButtonEvent;
 
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
@@ -22,6 +16,7 @@ import android.util.Log;
 public class MetaWatchConnection {
   public static final String TAG = MetaWatchConnection.class.getSimpleName();
   
+  public static final int MAX_8_BIT_VALUE = 255;
   public static final int MAX_16_BIT_VALUE = 65535;
   public static final byte OPTION_BITS_UNUSED = 0x00;
   public static final int PACKET_WAIT_MILLIS = 25;
@@ -33,6 +28,7 @@ public class MetaWatchConnection {
   
   public static final byte MSG_SET_VIBRATE_MODE = 0x23;
   public static final byte MSG_WRITE_BUFFER = 0x40;
+  public static final byte MSG_CONFIGURE_WATCH_MODE = 0x41;
   public static final byte MSG_CONFIGURE_IDLE_BUFFER_SIZE = 0x42;
   public static final byte MSG_UPDATE_DISPLAY = 0x43;
   public static final byte MSG_LOAD_TEMPLATE = 0x44;
@@ -146,10 +142,21 @@ public class MetaWatchConnection {
     send(message.toByteArray());
   }
   
+  public void configureWatchMode(byte mode, int displayTimeoutSec, boolean invertDisplay) {
+    displayTimeoutSec = Math.min(displayTimeoutSec, MAX_8_BIT_VALUE);
+    
+    ByteArrayOutputStream message = new ByteArrayOutputStream();
+    message.write(MSG_CONFIGURE_WATCH_MODE);
+    message.write(mode);
+    message.write(displayTimeoutSec);
+    message.write(invertDisplay ? 0x01 : 0x00);
+    send(message.toByteArray());
+  }
+
   public void vibrate(int timeOnMs, int timeOffMs, int cycles) {
     timeOnMs = Math.min(timeOnMs, MAX_16_BIT_VALUE);
     timeOffMs = Math.min(timeOffMs, MAX_16_BIT_VALUE);
-    cycles = Math.min(cycles, 255);
+    cycles = Math.min(cycles, MAX_8_BIT_VALUE);
     
     ByteArrayOutputStream message = new ByteArrayOutputStream();
     message.write(MSG_SET_VIBRATE_MODE);
