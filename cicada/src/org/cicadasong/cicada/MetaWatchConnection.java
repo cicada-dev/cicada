@@ -25,13 +25,30 @@ public class MetaWatchConnection {
   public static final byte MODE_APPLICATION = 0x01;
   public static final byte MODE_NOTIFICATION = 0x02;
   
-  
-  public static final byte MSG_SET_VIBRATE_MODE = 0x23;
-  public static final byte MSG_WRITE_BUFFER = 0x40;
-  public static final byte MSG_CONFIGURE_WATCH_MODE = 0x41;
-  public static final byte MSG_CONFIGURE_IDLE_BUFFER_SIZE = 0x42;
-  public static final byte MSG_UPDATE_DISPLAY = 0x43;
-  public static final byte MSG_LOAD_TEMPLATE = 0x44;
+  // MetaWatch protocol message codes
+  private static final byte MSG_GET_DEVICE_TYPE                    = 0x01;
+  private static final byte MSG_GET_DEVICE_TYPE_RESPONSE           = 0x02;
+  private static final byte MSG_GET_INFORMATION_STRING             = 0x03;
+  private static final byte MSG_GET_INFORMATION_TYPE_RESPONSE      = 0x04;
+  private static final byte MSG_ADVANCE_WATCH_HANDS                = 0x20;
+  private static final byte MSG_SET_VIBRATE_MODE                   = 0x23;
+  private static final byte MSG_STATUS_CHANGE_EVENT                = 0x33;
+  private static final byte MSG_BUTTON_EVENT_MESSAGE               = 0x34;
+  private static final byte MSG_WRITE_BUFFER                       = 0x40;
+  private static final byte MSG_CONFIGURE_WATCH_MODE               = 0x41;
+  private static final byte MSG_CONFIGURE_IDLE_BUFFER_SIZE         = 0x42;
+  private static final byte MSG_UPDATE_DISPLAY                     = 0x43;
+  private static final byte MSG_LOAD_TEMPLATE                      = 0x44;
+  private static final byte MSG_ENABLE_BUTTON                      = 0x46;
+  private static final byte MSG_DISABLE_BUTTON                     = 0x47;
+  private static final byte MSG_READ_BUTTON_CONFIGURATION          = 0x48;
+  private static final byte MSG_READ_BUTTON_CONFIGURATION_RESPONSE = 0x49;
+  private static final byte MSG_BATTERY_CONFIGURATION              = 0x53;
+  private static final byte MSG_LOW_BATTERY_WARNING                = 0x54;
+  private static final byte MSG_LOW_BATTERY_BLUETOOTH_OFF          = 0x55;
+  private static final byte MSG_READ_BATTERY_VOLTAGE_MESSAGE       = 0x56;
+  private static final byte MSG_READ_BATTERY_VOLTAGE_RESPONSE      = 0x57;
+  private static final byte MSG_ACCELEROMETER               = (byte) 0xEA;  // ???
   
   private BluetoothSocket socket;
   private Listener listener;
@@ -121,7 +138,7 @@ public class MetaWatchConnection {
   private void handleRemoteMessage(byte[] message) {
     Log.v(DeviceService.TAG, "Read message: " + hexString(message));
     switch (message[2]) {
-      case 0x34:
+      case MSG_BUTTON_EVENT_MESSAGE:
         Log.v(DeviceService.TAG, "Button press!");
         byte button = message[4];
         if (listener != null) {
