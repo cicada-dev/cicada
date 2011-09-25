@@ -148,6 +148,22 @@ public class MetaWatchConnection {
           listener.buttonPressed(ApolloIntents.ButtonPress.parseIntent(intent));
         }
       break;
+      
+      case MSG_STATUS_CHANGE_EVENT:
+        byte mode = message[3];
+        byte event = message[4];
+        Log.v(DeviceService.TAG, String.format("Status changed: %02x %02x", mode, event));
+        if (event == 0x01) {
+          if (listener != null) {
+            listener.modeChanged(mode);
+          }
+        } else if (event == 0x02) {
+          if (listener != null) {
+            listener.displayTimedOut(mode);
+          }
+        } else {
+          Log.w(TAG, String.format("Unknown status change event code: %02x", event));
+        }
     }
   }
   
@@ -223,11 +239,15 @@ public class MetaWatchConnection {
     }
     
     if (screenChanged) {
-      ByteArrayOutputStream message = new ByteArrayOutputStream();
-      message.write(MSG_UPDATE_DISPLAY);
-      message.write(mode | 0x10);
-      send(message.toByteArray());
+      updateDisplayToMode(mode);
     }
+  }
+
+  public void updateDisplayToMode(byte mode) {
+    ByteArrayOutputStream message = new ByteArrayOutputStream();
+    message.write(MSG_UPDATE_DISPLAY);
+    message.write(mode | 0x10);
+    send(message.toByteArray());
   }
   
   public void writeSolidColorToBuffer(byte mode, byte color) {
@@ -292,6 +312,8 @@ public class MetaWatchConnection {
   
   public interface Listener {
     public void buttonPressed(ButtonPress press);
+    public void modeChanged(byte mode);
+    public void displayTimedOut(byte mode);
   }
   
   

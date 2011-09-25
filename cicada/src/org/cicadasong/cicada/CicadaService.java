@@ -41,6 +41,8 @@ import android.os.RemoteException;
 import android.util.Log;
 
 public class CicadaService extends Service {
+  public static final String TAG = Cicada.TAG;
+  
   public static final String INTENT_LAUNCH_APP = "org.cicadasong.cicada.LAUNCH_APP";
   public static final String INTENT_SERVICE_STARTED = "org.cicadasong.cicada.SERVICE_STARTED";
   public static final String INTENT_SERVICE_STOPPED = "org.cicadasong.cicada.SERVICE_STOPPED";
@@ -97,6 +99,17 @@ public class CicadaService extends Service {
       @Override
       public void buttonPressed(ButtonPress event) {
         handleButtonPress(event);
+      }
+
+      @Override
+      public void modeChanged(byte mode) {
+        Log.v(TAG, "Mode changed: " + mode);
+      }
+
+      @Override
+      public void displayTimedOut(byte mode) {
+        Log.v(TAG, "Display timed out for mode: " + mode);
+        deviceServiceConnection.getService().setMode(MetaWatchConnection.MODE_APPLICATION);
       }
     };
   }

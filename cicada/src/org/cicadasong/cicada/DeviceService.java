@@ -90,6 +90,12 @@ public class DeviceService extends Service {
     }
   }
   
+  public void setMode(byte mode) {
+    if (connection != null) {
+      connection.updateDisplayToMode(mode);
+    }
+  }
+  
   private void connectToDevice() {
     BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
     BluetoothDevice device = adapter.getRemoteDevice(MAC);
@@ -99,7 +105,6 @@ public class DeviceService extends Service {
       connection = new MetaWatchConnection(socket, listener);
       sendConnectionNotice();
       connection.configureWatchMode(MetaWatchConnection.MODE_APPLICATION, 255, false);
-      connection.setNativeClockVisible(false);
       connection.vibrate(500, 0, 1);  // 01 0c 23 00 01 f4 01 00 00 01 ee 00 
     } catch (IOException e) {
       // TODO Auto-generated catch block
