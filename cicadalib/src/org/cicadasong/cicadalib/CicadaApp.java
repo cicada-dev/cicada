@@ -23,10 +23,13 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.RemoteException;
+import android.util.Log;
 
 /**
  * Base class for Cicada apps that provides a clean interface for dealing with CicadaService.
@@ -41,15 +44,21 @@ public abstract class CicadaApp extends Service {
     WIDGET_AND_APP
   }
   
+  // Received from Cicada
   public static final int MESSAGETYPE_ACTIVATE = 1;
   public static final int MESSAGETYPE_DEACTIVATE = 2;
   public static final int MESSAGETYPE_BUTTON_EVENT = 3;
+
+  // Sent to Cicada
+  public static final int MESSAGETYPE_PUSH_CANVAS = 100;
+  public static final int MESSAGETYPE_VIBRATE = 101;
   
   private AppType currentMode = AppType.NONE;
   private Bitmap bitmap;
   private Canvas canvas;
   private boolean isActive = false;
   private int sessionId;
+  private Messenger replyMessenger;
 
   // The messenger for communication with CicadaService.
   final Messenger messenger = new Messenger(new IncomingHandler());
@@ -79,7 +88,7 @@ public abstract class CicadaApp extends Service {
       case MESSAGETYPE_ACTIVATE:
         if (!isActive) {
           sessionId = msg.arg1;
-          activate(AppType.values()[msg.arg2]);
+          activate(AppType.values()[msg.arg2], msg.replyTo);
         }
         break;
 
@@ -176,15 +185,22 @@ public abstract class CicadaApp extends Service {
    * is active.
    */
   private void pushCanvas() {
-    if (!isActive || canvas == null) {
+    if (!isActive || canvas == null || replyMessenger == null) {
       return;
     }
     
-    Intent intent = new Intent(CicadaIntents.INTENT_PUSH_CANVAS);
-    intent.putExtra(CicadaIntents.EXTRA_BUFFER, BitmapUtil.bitmapToBuffer(bitmap));
-    intent.putExtra(CicadaIntents.EXTRA_APP_NAME, getAppName());
-    intent.putExtra(CicadaIntents.EXTRA_SESSION_ID, sessionId);
-    sendBroadcast(intent);
+    Bundle parameters = new Bundle();
+    parameters.putByteArray(CicadaIntents.EXTRA_BUFFER, BitmapUtil.bitmapToBuffer(bitmap));
+    parameters.putString(CicadaIntents.EXTRA_APP_NAME, getAppName());
+    parameters.putInt(CicadaIntents.EXTRA_SESSION_ID, sessionId);
+    
+    Message message = Message.obtain(null, MESSAGETYPE_PUSH_CANVAS);
+    message.setData(parameters);
+    try {
+      replyMessenger.send(message);
+    } catch (RemoteException e) {
+      Log.e(this.getClass().getSimpleName(), "Couldn't send screen update message to Cicada");
+    }
   }
   
   /**
@@ -217,21 +233,30 @@ public abstract class CicadaApp extends Service {
     if (!isActive) {
       throw new RuntimeException("CicadaApp.vibrate() called when the app wasn't active!");
     }
-    Intent intent = new Intent(CicadaIntents.INTENT_VIBRATE);
-    intent.putExtra(CicadaIntents.EXTRA_VIBRATE_ON_MSEC, onMillis);
-    intent.putExtra(CicadaIntents.EXTRA_VIBRATE_OFF_MSEC, offMillis);
-    intent.putExtra(CicadaIntents.EXTRA_VIBRATE_NUM_CYCLES, numPulses);
-    intent.putExtra(CicadaIntents.EXTRA_APP_NAME, getAppName());
-    intent.putExtra(CicadaIntents.EXTRA_SESSION_ID, sessionId);
-    sendBroadcast(intent);
+
+    Bundle parameters = new Bundle();
+    parameters.putInt(CicadaIntents.EXTRA_VIBRATE_ON_MSEC, onMillis);
+    parameters.putInt(CicadaIntents.EXTRA_VIBRATE_OFF_MSEC, offMillis);
+    parameters.putInt(CicadaIntents.EXTRA_VIBRATE_NUM_CYCLES, numPulses);
+    parameters.putString(CicadaIntents.EXTRA_APP_NAME, getAppName());
+    parameters.putInt(CicadaIntents.EXTRA_SESSION_ID, sessionId);
+    
+    Message message = Message.obtain(null, MESSAGETYPE_VIBRATE);
+    message.setData(parameters);
+    try {
+      replyMessenger.send(message);
+    } catch (RemoteException e) {
+      Log.e(this.getClass().getSimpleName(), "Couldn't send vibration request message to Cicada");
+    }
   }
   
   protected boolean isActive() {
     return isActive;
   }
   
-  private void activate(AppType mode) {
+  private void activate(AppType mode, Messenger messenger) {
     isActive = true;
+    replyMessenger = messenger;
     if (currentMode != mode) {
       // Make sure the canvas is reset to the correct size when changing mode.
       canvas = null;
@@ -243,6 +268,7 @@ public abstract class CicadaApp extends Service {
   
   private void deactivate() {
     isActive = false;
+    replyMessenger = null;
     
     canvas = null;
     bitmap = null;

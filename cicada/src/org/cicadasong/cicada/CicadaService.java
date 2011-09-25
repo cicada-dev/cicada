@@ -24,7 +24,6 @@ import org.cicadasong.cicada.MetaWatchConnection.Mode;
 import org.cicadasong.cicadalib.CicadaApp;
 import org.cicadasong.cicadalib.CicadaApp.AppType;
 import org.cicadasong.cicadalib.CicadaIntents;
-import org.cicadasong.cicadalib.CicadaIntents.ButtonEvent;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -35,6 +34,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
@@ -67,10 +68,10 @@ public class CicadaService extends Service {
   private Map<Byte, AppDescription> hotkeys = new HashMap<Byte, AppDescription>();
   private DeviceServiceConnection deviceServiceConnection;
   private MetaWatchConnection.Listener connectionListener;
-  
+  private final Messenger appMessenger = new Messenger(new AppHandler());
+
   @Override
   public IBinder onBind(Intent intent) {
-    // TODO Auto-generated method stub
     return null;
   }
 
@@ -128,6 +129,23 @@ public class CicadaService extends Service {
     }
     db.close();
   }
+  
+  /**
+   * Handler of incoming messages from apps.
+   */
+  class AppHandler extends Handler {
+    @Override
+    public void handleMessage(Message msg) {
+      switch (msg.what) {
+        case CicadaApp.MESSAGETYPE_PUSH_CANVAS:
+          Log.v(TAG, "Received push canvas message");
+          handleScreenUpdate(msg.getData());
+          break;
+        default:
+          super.handleMessage(msg);
+      }
+    }
+  }
 
   private BroadcastReceiver createBroadcastReceiver() {
     return new BroadcastReceiver() {
@@ -135,48 +153,9 @@ public class CicadaService extends Service {
       public void onReceive(Context context, Intent intent) {
         Log.v(Cicada.TAG, "Received intent: " + intent);
         if (intent.getAction().equals(CicadaIntents.INTENT_PUSH_CANVAS)) {
-          byte[] buffer = intent.getByteArrayExtra(CicadaIntents.EXTRA_BUFFER);
-          int senderSessionId = intent.getIntExtra(CicadaIntents.EXTRA_SESSION_ID, 0);
-          
-          if (widgetScreen.hasSessionId(senderSessionId)) {
-            buffer = widgetScreen.updateScreenBuffer(buffer, senderSessionId);
-          } else if (senderSessionId != sessionId) {
-            Log.e(Cicada.TAG, "App tried to push screen using expired sessionId " + senderSessionId
-                + " -- the current sessionId is " + sessionId);
-            return;
-          }
-          
-          if (USE_DEVICE_SERVICE && (deviceServiceConnection != null)) {
-            deviceServiceConnection.getService().updateScreen(
-                    buffer, Mode.APPLICATION);
-          }
-
-          // Do this even if we're using the device service in order to update simulated display
-          // in the app.
-          Intent newIntent = new Intent(ApolloIntents.INTENT_PUSH_BITMAP);
-          newIntent.putExtra(ApolloIntents.EXTRA_BITMAP_BUFFER, buffer);
-          sendBroadcast(newIntent);
+          handleScreenUpdate(intent.getExtras());
         } else if (intent.getAction().equals(CicadaIntents.INTENT_VIBRATE)) {
-          int senderSessionId = intent.getIntExtra(CicadaIntents.EXTRA_SESSION_ID, 0);
-          if (senderSessionId != sessionId) {
-            Log.e(Cicada.TAG, "App tried to vibrate using expired sessionId " + senderSessionId
-                + " -- the current sessionId is " + sessionId);
-            return;
-          }
-          
-          int onMillis = intent.getIntExtra(CicadaIntents.EXTRA_VIBRATE_ON_MSEC, 0);
-          int offMillis = intent.getIntExtra(CicadaIntents.EXTRA_VIBRATE_OFF_MSEC, 0);
-          int numCycles = intent.getIntExtra(CicadaIntents.EXTRA_VIBRATE_NUM_CYCLES, 0);
-          
-          if (USE_DEVICE_SERVICE && (deviceServiceConnection != null)) {
-            deviceServiceConnection.getService().vibrate(onMillis, offMillis, numCycles);
-          } else {
-            Intent newIntent = new Intent(ApolloIntents.INTENT_VIBRATE);
-            newIntent.putExtra(ApolloIntents.EXTRA_VIBRATE_ON_MSEC, onMillis);
-            newIntent.putExtra(ApolloIntents.EXTRA_VIBRATE_OFF_MSEC, offMillis);
-            newIntent.putExtra(ApolloIntents.EXTRA_VIBRATE_NUM_CYCLES, numCycles);
-            sendBroadcast(newIntent);
-          }
+          handleVibrationRequest(intent.getExtras());
         } else if (intent.getAction().equals(ApolloIntents.INTENT_BUTTON_PRESS)) {
           ButtonPress buttonPress = ApolloIntents.ButtonPress.parseIntent(intent);
           handleButtonPress(buttonPress);
@@ -195,8 +174,54 @@ public class CicadaService extends Service {
           }
         }
       }
-
     };
+  }
+
+  private void handleScreenUpdate(Bundle parameters) {
+    byte[] buffer = parameters.getByteArray(CicadaIntents.EXTRA_BUFFER);
+    int senderSessionId = parameters.getInt(CicadaIntents.EXTRA_SESSION_ID, 0);
+    
+    if (widgetScreen.hasSessionId(senderSessionId)) {
+      buffer = widgetScreen.updateScreenBuffer(buffer, senderSessionId);
+    } else if (senderSessionId != sessionId) {
+      Log.e(Cicada.TAG, "App tried to push screen using expired sessionId " + senderSessionId
+          + " -- the current sessionId is " + sessionId);
+      return;
+    }
+    
+    if (USE_DEVICE_SERVICE && (deviceServiceConnection != null)) {
+      deviceServiceConnection.getService().updateScreen(
+              buffer, Mode.APPLICATION);
+    }
+
+    // Do this even if we're using the device service in order to update simulated display
+    // in the app.
+    Intent newIntent = new Intent(ApolloIntents.INTENT_PUSH_BITMAP);
+    newIntent.putExtra(ApolloIntents.EXTRA_BITMAP_BUFFER, buffer);
+    sendBroadcast(newIntent);
+  }
+
+  private void handleVibrationRequest(Bundle parameters) {
+    int senderSessionId = parameters.getInt(CicadaIntents.EXTRA_SESSION_ID, 0);
+    if (senderSessionId != sessionId) {
+      Log.e(Cicada.TAG, "App tried to vibrate using expired sessionId " + senderSessionId
+          + " -- the current sessionId is " + sessionId);
+      return;
+    }
+    
+    int onMillis = parameters.getInt(CicadaIntents.EXTRA_VIBRATE_ON_MSEC, 0);
+    int offMillis = parameters.getInt(CicadaIntents.EXTRA_VIBRATE_OFF_MSEC, 0);
+    int numCycles = parameters.getInt(CicadaIntents.EXTRA_VIBRATE_NUM_CYCLES, 0);
+    
+    if (USE_DEVICE_SERVICE && (deviceServiceConnection != null)) {
+      deviceServiceConnection.getService().vibrate(onMillis, offMillis, numCycles);
+    } else {
+      Intent newIntent = new Intent(ApolloIntents.INTENT_VIBRATE);
+      newIntent.putExtra(ApolloIntents.EXTRA_VIBRATE_ON_MSEC, onMillis);
+      newIntent.putExtra(ApolloIntents.EXTRA_VIBRATE_OFF_MSEC, offMillis);
+      newIntent.putExtra(ApolloIntents.EXTRA_VIBRATE_NUM_CYCLES, numCycles);
+      sendBroadcast(newIntent);
+    }
   }
 
   protected void handleButtonPress(ButtonPress buttonPress) {
@@ -507,6 +532,7 @@ public class CicadaService extends Service {
     public void activateApp() {
       Message activateMessage =
           Message.obtain(null, CicadaApp.MESSAGETYPE_ACTIVATE, sessionId, mode.ordinal());
+      activateMessage.replyTo = appMessenger;
       sendMessage(activateMessage);
     }
     
