@@ -64,7 +64,10 @@ public class CicadaService extends Service {
   private int sessionId = 1;
   private WidgetScreen widgetScreen = new WidgetScreen();
   private boolean launchedFromWidgetScreen = false;
+  
   private static boolean isRunning = false;
+  private static byte[] screenBuffer;
+  
   private Map<Byte, AppDescription> hotkeys = new HashMap<Byte, AppDescription>();
   private DeviceServiceConnection deviceServiceConnection;
   private MetaWatchConnection.Listener connectionListener;
@@ -119,6 +122,10 @@ public class CicadaService extends Service {
   
   public static boolean isRunning() {
     return isRunning;
+  }
+  
+  public static byte[] getLastScreenBuffer() {
+    return screenBuffer;
   }
   
   private void loadHotkeys() {
@@ -189,6 +196,7 @@ public class CicadaService extends Service {
       return;
     }
     
+    screenBuffer = buffer;
     if (USE_DEVICE_SERVICE && (deviceServiceConnection != null)) {
       deviceServiceConnection.getService().updateScreen(
               buffer, Mode.APPLICATION);

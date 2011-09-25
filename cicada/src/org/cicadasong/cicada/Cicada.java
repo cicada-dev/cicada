@@ -78,6 +78,7 @@ public class Cicada extends Activity {
   protected void onResume() {
     super.onResume();
     
+    restoreUIState();
     setUpBroadcastReceiver();
   }
   
@@ -96,6 +97,15 @@ public class Cicada extends Activity {
   
   private void updateServiceToggleState() {
     serviceToggle.setChecked(CicadaService.isRunning());
+  }
+  
+  private void restoreUIState() {
+    updateServiceToggleState();
+    if (CicadaService.isRunning() && CicadaService.getLastScreenBuffer() != null) {
+      display.setByteBuffer(CicadaService.getLastScreenBuffer());
+    } else {
+      display.clearDisplay();
+    }
   }
   
   private void setUpBroadcastReceiver() {
