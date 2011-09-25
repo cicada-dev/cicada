@@ -20,6 +20,7 @@ import android.content.SharedPreferences;
 public class PrefUtil {
   public static final String SHARED_PREF_NAME = "CicadaPrefs";
   private static final String PREF_SCAN_COMPLETED = "ScanCompleted";
+  private static final String PREF_WATCH_MAC = "WatchMAC";
   
   private PrefUtil() {
   }
@@ -34,5 +35,10 @@ public class PrefUtil {
         context.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE).edit();
     prefEdit.putBoolean(PREF_SCAN_COMPLETED, value);
     prefEdit.commit();
+  }
+  
+  public static String getWatchMAC(Context context) {
+    SharedPreferences prefs = context.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
+    return prefs.getString(PREF_WATCH_MAC, "").toUpperCase();
   }
 }

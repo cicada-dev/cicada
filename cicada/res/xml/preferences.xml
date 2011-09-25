@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+  <EditTextPreference
+    android:key="WatchMAC"
+    android:title="Watch MAC Address"
+    android:summary="Looks like: AB:CD:EF:01:23:45"
+    />
+</PreferenceScreen>

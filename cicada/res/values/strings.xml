@@ -8,6 +8,8 @@
     <string name="service_running_toggle_label">Cicada Service is Running</string>
     <string name="service_stopped_toggle_label">Cicada Service is Stopped</string>
     
+    <string name="error_mac">Please set the Watch MAC in the Settings menu first.</string>
+    
     <string name="app_list_service_name">Cicada App List</string>
     
     <string name="welcome_on_screen">Welcome\nto Cicada</string>
@@ -34,4 +36,8 @@
     
     <!-- Device Service -->
     <string name="device_service_name">Device Service</string>
+    
+    <!-- Settings -->
+    <string name="settings_activity_title">Cicada Settings</string>
+    <string name="menu_label_settings">Settings</string>
 </resources>

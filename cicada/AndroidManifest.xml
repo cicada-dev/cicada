@@ -19,6 +19,11 @@
             </intent-filter>
         </activity>
         
+        <activity android:name=".CicadaSettingsActivity"
+                  android:label="@string/settings_activity_title"
+                  android:configChanges="keyboardHidden|orientation"
+                  />
+
         <activity android:name=".WidgetSetup"
                   android:label="@string/widget_setup"
                   android:configChanges="keyboardHidden|orientation">

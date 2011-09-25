@@ -23,8 +23,6 @@ public class DeviceService extends Service {
   public static final int MESSAGETYPE_DEACTIVATE = 2;
   public static final int MESSAGETYPE_BUTTON_EVENT = 3;
   
-  public static final String MAC = "C0:E4:22:86:70:A3";  // TODO: Make pref & autodetect
-  
   // The "well-known" UUID that the Android docs recommend using for SPP.
   public static final UUID SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
@@ -100,7 +98,7 @@ public class DeviceService extends Service {
   
   private void connectToDevice() {
     BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-    BluetoothDevice device = adapter.getRemoteDevice(MAC);
+    BluetoothDevice device = adapter.getRemoteDevice(PrefUtil.getWatchMAC(this));
     try {
       socket = device.createRfcommSocketToServiceRecord(SPP_UUID);
       socket.connect();

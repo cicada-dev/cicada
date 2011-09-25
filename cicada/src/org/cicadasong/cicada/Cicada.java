@@ -29,6 +29,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 public class Cicada extends Activity {
@@ -51,7 +52,9 @@ public class Cicada extends Activity {
       @Override
       public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         if (isChecked) {
-          startService(new Intent(getBaseContext(), CicadaService.class));
+          if (!checkSettingsAndStart()) {
+            serviceToggle.setChecked(false);  // Settings in a bad state
+          }
         } else {
           stopService(new Intent(getBaseContext(), CicadaService.class));
         }
@@ -60,7 +63,7 @@ public class Cicada extends Activity {
     updateServiceToggleState();
     
     if (!CicadaService.isRunning()) {
-      startService(new Intent(getBaseContext(), CicadaService.class));
+      checkSettingsAndStart();
     }
   }
 
@@ -76,6 +79,19 @@ public class Cicada extends Activity {
     super.onResume();
     
     setUpBroadcastReceiver();
+  }
+  
+  private boolean checkSettingsAndStart() {
+    String mac = PrefUtil.getWatchMAC(this);
+    if (mac.length() == 0) {
+      Toast toast = Toast.makeText(this, getString(R.string.error_mac), Toast.LENGTH_LONG);
+      toast.show();
+      return false;
+    }
+    
+    startService(new Intent(getBaseContext(), CicadaService.class));
+    
+    return true;
   }
   
   private void updateServiceToggleState() {
@@ -137,6 +153,10 @@ public class Cicada extends Activity {
       launchHotkeySetup();
       return true;
 
+    case R.id.menu_item_settings:
+      launchSettings();
+      return true;
+
     default:
       return super.onOptionsItemSelected(item);
     }
@@ -151,4 +171,10 @@ public class Cicada extends Activity {
     Intent intent = new Intent(this, HotkeySetupActivity.class);
     startActivity(intent);
   }
+  
+  private void launchSettings() {
+    Intent intent = new Intent(this, CicadaSettingsActivity.class);
+    startActivity(intent);
+  }
+
 }
