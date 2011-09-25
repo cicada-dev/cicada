@@ -62,6 +62,7 @@ public class CicadaService extends Service {
   private AppConnection activeConnection;
   private int sessionId = 1;
   private WidgetScreen widgetScreen = new WidgetScreen();
+  private boolean launchedFromWidgetScreen = false;
   private static boolean isRunning = false;
   private Map<Byte, AppDescription> hotkeys = new HashMap<Byte, AppDescription>();
   private DeviceServiceConnection deviceServiceConnection;
@@ -203,15 +204,32 @@ public class CicadaService extends Service {
     Log.v(Cicada.TAG, "Got button press: " + buttons);
     if (buttonPress != null) {
       if (buttonPress.hasButtonsPressed(ApolloConfig.Button.TOP_LEFT)) {
-        if (!AppList.DESCRIPTION.equals(activeApp)) {
+        if (launchedFromWidgetScreen) {
+          switchToApp(WidgetScreen.DESCRIPTION);
+        } else if (!AppList.DESCRIPTION.equals(activeApp)) {
           switchToApp(AppList.DESCRIPTION);
         } else {
           activeConnection.sendButtonEvent(buttons);
         }
-      } else if (IDLE_SCREEN.equals(activeApp) ||
-          WidgetScreen.DESCRIPTION.equals(activeApp)) {
+      } else if (IDLE_SCREEN.equals(activeApp)) {
         if (hotkeys.containsKey(buttons)) {
           switchToApp(hotkeys.get(buttons));
+        }
+      } else if (WidgetScreen.DESCRIPTION.equals(activeApp)) {
+        Log.v(TAG, "WIDGET TEST");
+        int appIndex = -1;
+        if (buttonPress.hasButtonsPressed(ApolloConfig.Button.TOP_RIGHT)){
+          appIndex = 0;
+        } else if (buttonPress.hasButtonsPressed(ApolloConfig.Button.MIDDLE_RIGHT)){
+          appIndex = 1;
+        } else if (buttonPress.hasButtonsPressed(ApolloConfig.Button.BOTTOM_RIGHT)){
+          appIndex = 2;
+        }
+        if (appIndex >= 0) {
+          AppDescription app = widgetScreen.widgets[appIndex];
+          if (app != null && app.supportsFullScreenMode()) {
+            switchToApp(app);
+          }
         }
       } else if (activeApp != null) {
         activeConnection.sendButtonEvent(buttons);
@@ -307,6 +325,9 @@ public class CicadaService extends Service {
       return;
     }
     
+    launchedFromWidgetScreen =
+        WidgetScreen.DESCRIPTION.equals(activeApp) && !AppList.DESCRIPTION.equals(app);
+
     if (activeApp != null) {
       deactivateApp(activeApp);
     }

@@ -42,6 +42,14 @@ public class AppDescription {
   public ComponentName getComponentName() {
     return new ComponentName(packageName, className);
   }
+  
+  public boolean supportsFullScreenMode() {
+    return modes == AppType.APP || modes == AppType.WIDGET_AND_APP;
+  }
+  
+  public boolean supportsWidgetMode() {
+    return modes == AppType.WIDGET || modes == AppType.WIDGET_AND_APP;
+  }
 
   @Override
   public boolean equals(Object o) {
