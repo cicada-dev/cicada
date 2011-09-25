@@ -20,6 +20,7 @@ import java.util.Map;
 import org.cicadasong.apollo.ApolloConfig;
 import org.cicadasong.apollo.ApolloIntents;
 import org.cicadasong.apollo.ApolloIntents.ButtonPress;
+import org.cicadasong.cicada.MetaWatchConnection.Mode;
 import org.cicadasong.cicadalib.CicadaApp;
 import org.cicadasong.cicadalib.CicadaApp.AppType;
 import org.cicadasong.cicadalib.CicadaIntents;
@@ -102,14 +103,14 @@ public class CicadaService extends Service {
       }
 
       @Override
-      public void modeChanged(byte mode) {
+      public void modeChanged(Mode mode) {
         Log.v(TAG, "Mode changed: " + mode);
       }
 
       @Override
-      public void displayTimedOut(byte mode) {
+      public void displayTimedOut(Mode mode) {
         Log.v(TAG, "Display timed out for mode: " + mode);
-        deviceServiceConnection.getService().setMode(MetaWatchConnection.MODE_APPLICATION);
+        deviceServiceConnection.getService().setMode(Mode.APPLICATION);
       }
     };
   }
@@ -146,7 +147,7 @@ public class CicadaService extends Service {
           
           if (USE_DEVICE_SERVICE && (deviceServiceConnection != null)) {
             deviceServiceConnection.getService().updateScreen(
-                    buffer, MetaWatchConnection.MODE_APPLICATION);
+                    buffer, Mode.APPLICATION);
           } else {
             Intent newIntent = new Intent(ApolloIntents.INTENT_PUSH_BITMAP);
             newIntent.putExtra(ApolloIntents.EXTRA_BITMAP_BUFFER, buffer);

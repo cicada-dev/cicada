@@ -3,6 +3,8 @@ package org.cicadasong.cicada;
 import java.io.IOException;
 import java.util.UUID;
 
+import org.cicadasong.cicada.MetaWatchConnection.Mode;
+
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -84,13 +86,13 @@ public class DeviceService extends Service {
     connection.vibrate(timeOnMs, timeOffMs, cycles);
   }
   
-  public void updateScreen(byte[] buffer, byte mode) {
+  public void updateScreen(byte[] buffer, Mode mode) {
     if (connection != null) {
       connection.updateScreen(buffer, mode);
     }
   }
   
-  public void setMode(byte mode) {
+  public void setMode(Mode mode) {
     if (connection != null) {
       connection.updateDisplayToMode(mode);
     }
@@ -104,7 +106,7 @@ public class DeviceService extends Service {
       socket.connect();
       connection = new MetaWatchConnection(socket, listener);
       sendConnectionNotice();
-      connection.configureWatchMode(MetaWatchConnection.MODE_APPLICATION, 255, false);
+      connection.configureWatchMode(Mode.APPLICATION, 255, false);
       connection.vibrate(500, 0, 1);  // 01 0c 23 00 01 f4 01 00 00 01 ee 00 
     } catch (IOException e) {
       // TODO Auto-generated catch block

@@ -21,9 +21,30 @@ public class MetaWatchConnection {
   public static final byte OPTION_BITS_UNUSED = 0x00;
   public static final int PACKET_WAIT_MILLIS = 25;
   
-  public static final byte MODE_IDLE = 0x00;
-  public static final byte MODE_APPLICATION = 0x01;
-  public static final byte MODE_NOTIFICATION = 0x02;
+  public enum Mode {
+    IDLE         (0x00),
+    APPLICATION  (0x01),
+    NOTIFICATION (0x02);
+    
+    private byte value;
+    
+    private Mode(int newValue) {
+      value = (byte) newValue;
+    }
+    
+    public byte getValue(Mode mode) {
+      return mode.value;
+    }
+    
+    public static Mode valueOf(byte mode) {
+      for (Mode possibleMode : Mode.values()) {
+        if (possibleMode.value == mode) {
+          return possibleMode;
+        }
+      }
+      return Mode.IDLE;
+    }
+  }
   
   // MetaWatch protocol message codes
   private static final byte MSG_GET_DEVICE_TYPE                    = 0x01;
@@ -150,9 +171,9 @@ public class MetaWatchConnection {
       break;
       
       case MSG_STATUS_CHANGE_EVENT:
-        byte mode = message[3];
+        Mode mode = Mode.valueOf(message[3]);
         byte event = message[4];
-        Log.v(DeviceService.TAG, String.format("Status changed: %02x %02x", mode, event));
+        Log.v(DeviceService.TAG, String.format("Status changed: %s %02x", mode, event));
         if (event == 0x01) {
           if (listener != null) {
             listener.modeChanged(mode);
@@ -175,12 +196,12 @@ public class MetaWatchConnection {
     send(message.toByteArray());
   }
   
-  public void configureWatchMode(byte mode, int displayTimeoutSec, boolean invertDisplay) {
+  public void configureWatchMode(Mode mode, int displayTimeoutSec, boolean invertDisplay) {
     displayTimeoutSec = Math.min(displayTimeoutSec, MAX_8_BIT_VALUE);
     
     ByteArrayOutputStream message = new ByteArrayOutputStream();
     message.write(MSG_CONFIGURE_WATCH_MODE);
-    message.write(mode);
+    message.write(mode.value);
     message.write(displayTimeoutSec);
     message.write(invertDisplay ? 0x01 : 0x00);
     send(message.toByteArray());
@@ -203,12 +224,12 @@ public class MetaWatchConnection {
     send(message.toByteArray());
   }
   
-  public void updateScreen(byte[] buffer, byte mode) {
+  public void updateScreen(byte[] buffer, Mode mode) {
     boolean screenChanged = false;
-    if (!bufferCleared[mode]) {
+    if (!bufferCleared[mode.value]) {
       screenChanged = true;
       writeSolidColorToBuffer(mode, (byte) 0x00);
-      bufferCleared[mode] = true;
+      bufferCleared[mode.value] = true;
     }
     
     for (int row = 0; row < 96; row += 2) {
@@ -216,9 +237,9 @@ public class MetaWatchConnection {
       for (int rowOffset = 0; rowOffset < 2; rowOffset++) {
         int rowStart = ((row + rowOffset) * 12);
         for (int i = 0; i < 12; i++) {
-          if (buffer[rowStart + i] != screenBuffers[mode][rowStart + i]) {
+          if (buffer[rowStart + i] != screenBuffers[mode.value][rowStart + i]) {
             different = true;
-            screenBuffers[mode][rowStart + i] = buffer[rowStart + i];
+            screenBuffers[mode.value][rowStart + i] = buffer[rowStart + i];
           }
         }
       }
@@ -226,7 +247,7 @@ public class MetaWatchConnection {
         screenChanged = true;
         ByteArrayOutputStream message = new ByteArrayOutputStream();
         message.write(MSG_WRITE_BUFFER);
-        message.write(mode);
+        message.write(mode.value);
         for (int rowOffset = 0; rowOffset < 2; rowOffset++) {
           message.write(row + rowOffset);  // row index
           int rowStart = ((row + rowOffset) * 12);
@@ -243,17 +264,17 @@ public class MetaWatchConnection {
     }
   }
 
-  public void updateDisplayToMode(byte mode) {
+  public void updateDisplayToMode(Mode mode) {
     ByteArrayOutputStream message = new ByteArrayOutputStream();
     message.write(MSG_UPDATE_DISPLAY);
-    message.write(mode | 0x10);
+    message.write(mode.value | 0x10);
     send(message.toByteArray());
   }
   
-  public void writeSolidColorToBuffer(byte mode, byte color) {
+  public void writeSolidColorToBuffer(Mode mode, byte color) {
     ByteArrayOutputStream message = new ByteArrayOutputStream();
     message.write(MSG_LOAD_TEMPLATE);
-    message.write(mode);
+    message.write(mode.value);
     message.write(color == 0x00 ? 0x00 : 0x01);
     send(message.toByteArray());
   }
@@ -312,8 +333,8 @@ public class MetaWatchConnection {
   
   public interface Listener {
     public void buttonPressed(ButtonPress press);
-    public void modeChanged(byte mode);
-    public void displayTimedOut(byte mode);
+    public void modeChanged(Mode mode);
+    public void displayTimedOut(Mode mode);
   }
   
   
