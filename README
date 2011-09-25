@@ -1,1 +1,12 @@
-Cicada is a project to aid communication with Apollo and similar things.
+Cicada is an application and widget shell for Android applications on the
+MetaWatch bluetooth watch.  It provides a simple menu for switching
+between different Cicada-compatible Android apps, and it also has a widget
+system that divides the watch screen into thirds, with each third being
+updated by an independent Android app.
+
+Cicada can communicate with the device directly, or via MetaWatch manager.
+
+Cicada is released under the Apache 2.0 license.
+
+Cicada was created by Joe Hughes (joe@retrovirus.com), but source contributions
+are most welcome!
