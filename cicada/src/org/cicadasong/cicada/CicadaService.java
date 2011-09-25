@@ -148,11 +148,13 @@ public class CicadaService extends Service {
           if (USE_DEVICE_SERVICE && (deviceServiceConnection != null)) {
             deviceServiceConnection.getService().updateScreen(
                     buffer, Mode.APPLICATION);
-          } else {
-            Intent newIntent = new Intent(ApolloIntents.INTENT_PUSH_BITMAP);
-            newIntent.putExtra(ApolloIntents.EXTRA_BITMAP_BUFFER, buffer);
-            sendBroadcast(newIntent);
           }
+
+          // Do this even if we're using the device service in order to update simulated display
+          // in the app.
+          Intent newIntent = new Intent(ApolloIntents.INTENT_PUSH_BITMAP);
+          newIntent.putExtra(ApolloIntents.EXTRA_BITMAP_BUFFER, buffer);
+          sendBroadcast(newIntent);
         } else if (intent.getAction().equals(CicadaIntents.INTENT_VIBRATE)) {
           int senderSessionId = intent.getIntExtra(CicadaIntents.EXTRA_SESSION_ID, 0);
           if (senderSessionId != sessionId) {
