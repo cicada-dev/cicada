@@ -125,5 +125,9 @@ public class ApolloIntents {
     public boolean hasButtonsPressed(Button... buttons) {
       return pressedButtons == bitfieldFromButtons(buttons);
     }
+    
+    public byte getButton() {
+      return pressedButtons;
+    }
   }
 }

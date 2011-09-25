@@ -23,6 +23,7 @@ import org.cicadasong.apollo.ApolloIntents.ButtonPress;
 import org.cicadasong.cicadalib.CicadaApp;
 import org.cicadasong.cicadalib.CicadaApp.AppType;
 import org.cicadasong.cicadalib.CicadaIntents;
+import org.cicadasong.cicadalib.CicadaIntents.ButtonEvent;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -47,6 +48,8 @@ public class CicadaService extends Service {
   public static final String EXTRA_APP_CLASS = "app_class";
   public static final String EXTRA_APP_NAME = "app_name";
   
+  public static final boolean USE_DEVICE_SERVICE = true;
+  
   // Special AppDescription, since idle screen isn't a real app.
   public static final AppDescription IDLE_SCREEN =
       new AppDescription("IDLE_SCREEN", "IDLE_SCREEN", "Idle Screen", AppType.APP);
@@ -58,6 +61,8 @@ public class CicadaService extends Service {
   private WidgetScreen widgetScreen = new WidgetScreen();
   private static boolean isRunning = false;
   private Map<Byte, AppDescription> hotkeys = new HashMap<Byte, AppDescription>();
+  private DeviceServiceConnection deviceServiceConnection;
+  private MetaWatchConnection.Listener connectionListener;
   
   @Override
   public IBinder onBind(Intent intent) {
@@ -85,6 +90,15 @@ public class CicadaService extends Service {
     sendBroadcast(new Intent(INTENT_SERVICE_STARTED));
 
     super.onCreate();
+  }
+  
+  private MetaWatchConnection.Listener createConnectionListener() {
+    return new MetaWatchConnection.Listener() {
+      @Override
+      public void buttonPressed(ButtonPress event) {
+        handleButtonPress(event);
+      }
+    };
   }
   
   public static boolean isRunning() {
@@ -117,9 +131,14 @@ public class CicadaService extends Service {
             return;
           }
           
-          Intent newIntent = new Intent(ApolloIntents.INTENT_PUSH_BITMAP);
-          newIntent.putExtra(ApolloIntents.EXTRA_BITMAP_BUFFER, buffer);
-          sendBroadcast(newIntent);
+          if (USE_DEVICE_SERVICE && (deviceServiceConnection != null)) {
+            deviceServiceConnection.getService().updateScreen(
+                    buffer, MetaWatchConnection.MODE_APPLICATION);
+          } else {
+            Intent newIntent = new Intent(ApolloIntents.INTENT_PUSH_BITMAP);
+            newIntent.putExtra(ApolloIntents.EXTRA_BITMAP_BUFFER, buffer);
+            sendBroadcast(newIntent);
+          }
         } else if (intent.getAction().equals(CicadaIntents.INTENT_VIBRATE)) {
           int senderSessionId = intent.getIntExtra(CicadaIntents.EXTRA_SESSION_ID, 0);
           if (senderSessionId != sessionId) {
@@ -132,30 +151,18 @@ public class CicadaService extends Service {
           int offMillis = intent.getIntExtra(CicadaIntents.EXTRA_VIBRATE_OFF_MSEC, 0);
           int numCycles = intent.getIntExtra(CicadaIntents.EXTRA_VIBRATE_NUM_CYCLES, 0);
           
-          Intent newIntent = new Intent(ApolloIntents.INTENT_VIBRATE);
-          newIntent.putExtra(ApolloIntents.EXTRA_VIBRATE_ON_MSEC, onMillis);
-          newIntent.putExtra(ApolloIntents.EXTRA_VIBRATE_OFF_MSEC, offMillis);
-          newIntent.putExtra(ApolloIntents.EXTRA_VIBRATE_NUM_CYCLES, numCycles);
-          sendBroadcast(newIntent);
+          if (USE_DEVICE_SERVICE && (deviceServiceConnection != null)) {
+            deviceServiceConnection.getService().vibrate(onMillis, offMillis, numCycles);
+          } else {
+            Intent newIntent = new Intent(ApolloIntents.INTENT_VIBRATE);
+            newIntent.putExtra(ApolloIntents.EXTRA_VIBRATE_ON_MSEC, onMillis);
+            newIntent.putExtra(ApolloIntents.EXTRA_VIBRATE_OFF_MSEC, offMillis);
+            newIntent.putExtra(ApolloIntents.EXTRA_VIBRATE_NUM_CYCLES, numCycles);
+            sendBroadcast(newIntent);
+          }
         } else if (intent.getAction().equals(ApolloIntents.INTENT_BUTTON_PRESS)) {
           ButtonPress buttonPress = ApolloIntents.ButtonPress.parseIntent(intent);
-          if (buttonPress != null) {
-            byte buttons = intent.getByteExtra(ApolloIntents.EXTRA_BUTTONS, (byte) 0);
-            if (buttonPress.hasButtonsPressed(ApolloConfig.Button.TOP_LEFT)) {
-              if (!AppList.DESCRIPTION.equals(activeApp)) {
-                switchToApp(AppList.DESCRIPTION);
-              } else {
-                activeConnection.sendButtonEvent(buttons);
-              }
-            } else if (IDLE_SCREEN.equals(activeApp) ||
-                WidgetScreen.DESCRIPTION.equals(activeApp)) {
-              if (hotkeys.containsKey(buttons)) {
-                switchToApp(hotkeys.get(buttons));
-              }
-            } else if (activeApp != null) {
-              activeConnection.sendButtonEvent(buttons);
-            }
-          }
+          handleButtonPress(buttonPress);
         } else if (intent.getAction().equals(INTENT_LAUNCH_APP)) {
           String packageName = intent.getExtras().getString(EXTRA_APP_PACKAGE);
           String className = intent.getExtras().getString(EXTRA_APP_CLASS);
@@ -171,12 +178,39 @@ public class CicadaService extends Service {
           }
         }
       }
+
     };
+  }
+
+  protected void handleButtonPress(ButtonPress buttonPress) {
+    byte buttons = buttonPress.getButton();
+    Log.v(Cicada.TAG, "Got button press: " + buttons);
+    if (buttonPress != null) {
+      if (buttonPress.hasButtonsPressed(ApolloConfig.Button.TOP_LEFT)) {
+        if (!AppList.DESCRIPTION.equals(activeApp)) {
+          switchToApp(AppList.DESCRIPTION);
+        } else {
+          activeConnection.sendButtonEvent(buttons);
+        }
+      } else if (IDLE_SCREEN.equals(activeApp) ||
+          WidgetScreen.DESCRIPTION.equals(activeApp)) {
+        if (hotkeys.containsKey(buttons)) {
+          switchToApp(hotkeys.get(buttons));
+        }
+      } else if (activeApp != null) {
+        activeConnection.sendButtonEvent(buttons);
+      }
+    }
   }
 
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
     startForeground();
+    
+    if (USE_DEVICE_SERVICE) {
+      deviceServiceConnection = new DeviceServiceConnection();
+      deviceServiceConnection.connect();
+    }
     
     if (activeApp != null) {
       deactivateApp(activeApp);
@@ -224,6 +258,11 @@ public class CicadaService extends Service {
   @Override
   public void onDestroy() {
     Log.v(Cicada.TAG, "Cicada Service Destroyed");
+    
+    if (deviceServiceConnection != null) {
+      deviceServiceConnection.disconnect();
+      deviceServiceConnection = null;
+    }
     
     if (activeApp != null) {
       deactivateApp(activeApp);
@@ -341,6 +380,43 @@ public class CicadaService extends Service {
       activeApp = null;
       activeConnection = null;
       switchToApp(AppList.DESCRIPTION);
+    }
+  }
+  
+  public class DeviceServiceConnection implements ServiceConnection {
+    private boolean connected;
+    private boolean requestedDisconnect;
+    private DeviceService service;
+
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder binder) {
+      Log.v(Cicada.TAG, "DeviceService bound");
+      service = ((DeviceService.DeviceServiceBinder) binder).getService();
+      connectionListener = createConnectionListener();
+      service.setListener(connectionListener);
+      connected = true;
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+      Log.v(Cicada.TAG, "DeviceService disconnected");
+      connected = false;
+    }
+    
+    public void connect() {
+      Log.v(Cicada.TAG, "Attempting to bind device service");
+      requestedDisconnect = false;
+      Intent bindingIntent = new Intent(getApplicationContext(), DeviceService.class);
+      bindService(bindingIntent, this, Context.BIND_AUTO_CREATE);
+    }
+    
+    public void disconnect() {
+      requestedDisconnect = true;
+      unbindService(this);
+    }
+    
+    public DeviceService getService() {
+      return service;
     }
   }
 
