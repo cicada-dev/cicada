@@ -6,6 +6,10 @@ updated by an independent Android app.
 
 Cicada can communicate with the device directly, or via MetaWatch manager.
 
+The Cicada project also includes many sample applications that developers
+can use as a starting point for their own Cicada-compatible apps; they're
+located under the samples directory.
+
 Cicada is released under the Apache 2.0 license.
 
 Cicada was created by Joe Hughes (joe@retrovirus.com), but source contributions
