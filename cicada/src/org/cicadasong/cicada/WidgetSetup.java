@@ -38,7 +38,7 @@ public class WidgetSetup extends Activity {
   public static final String INTENT_WIDGETS_CHANGED = "org.cicadasong.cicada.WIDGETS_CHANGED";
   
   public static final AppDescription NONE =
-      new AppDescription("NONE", "NONE", "(None)", AppType.NONE);
+      new AppDescription("NONE", "NONE", null, "(None)", AppType.NONE);
   
   public static final int TOP_WIDGET = 0;
   public static final int MIDDLE_WIDGET = 1;

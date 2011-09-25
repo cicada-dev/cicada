@@ -58,7 +58,7 @@ public class PackageUtil {
                 Log.w(Cicada.TAG, "Couldn't recognize app type \"" + appTypeString + "\" for " +
                     "service \"" + serviceInfo.name + "\", assuming " + mode.name());
               }
-              AppDescription app = new AppDescription(packageName, serviceInfo.name,
+              AppDescription app = new AppDescription(packageName, serviceInfo.name, null,
                   serviceInfo.loadLabel(pm).toString(), mode);
               apps.add(app);
             }

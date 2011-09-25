@@ -20,7 +20,8 @@ import org.cicadasong.cicadalib.CicadaApp.AppType;
 
 public class WidgetScreen {
   public static final AppDescription DESCRIPTION =
-      new AppDescription("WIDGET_SCREEN", "WIDGET_SCREEN", "Widget Screen", AppType.APP);
+      new AppDescription(WidgetScreen.class.getPackage().getName(), "WIDGET_SCREEN",
+          WidgetSetup.class.getName(), "Widget Screen", AppType.APP);
   
   public static final int NUM_WIDGETS = 3;
   

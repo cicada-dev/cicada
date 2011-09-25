@@ -50,16 +50,17 @@ public class CicadaService extends Service {
   public static final String INTENT_SERVICE_STOPPED = "org.cicadasong.cicada.SERVICE_STOPPED";
   public static final String EXTRA_APP_PACKAGE = "app_package";
   public static final String EXTRA_APP_CLASS = "app_class";
+  public static final String EXTRA_APP_SETTINGS_CLASS = "app_settings_class";
   public static final String EXTRA_APP_NAME = "app_name";
   
   public static final boolean USE_DEVICE_SERVICE = true;
   
   // Special AppDescription, since idle screen isn't a real app.
   public static final AppDescription IDLE_SCREEN =
-      new AppDescription("IDLE_SCREEN", "IDLE_SCREEN", "Idle Screen", AppType.APP);
+      new AppDescription("IDLE_SCREEN", "IDLE_SCREEN", null, "Idle Screen", AppType.APP);
   
   private BroadcastReceiver receiver;
-  private AppDescription activeApp;
+  private static AppDescription activeApp;
   private AppConnection activeConnection;
   private int sessionId = 1;
   private WidgetScreen widgetScreen = new WidgetScreen();
@@ -128,6 +129,10 @@ public class CicadaService extends Service {
     return screenBuffer;
   }
   
+  public static AppDescription getActiveApp() {
+    return activeApp;
+  }
+  
   private void loadHotkeys() {
     AppDatabase db = new AppDatabase(this);
     hotkeys.clear();
@@ -169,8 +174,10 @@ public class CicadaService extends Service {
         } else if (intent.getAction().equals(INTENT_LAUNCH_APP)) {
           String packageName = intent.getExtras().getString(EXTRA_APP_PACKAGE);
           String className = intent.getExtras().getString(EXTRA_APP_CLASS);
+          String settingsClassName = intent.getExtras().getString(EXTRA_APP_SETTINGS_CLASS);
           String appName = intent.getExtras().getString(EXTRA_APP_NAME);
-          AppDescription app = new AppDescription(packageName, className, appName, AppType.APP);
+          AppDescription app =
+              new AppDescription(packageName, className, settingsClassName, appName, AppType.APP);
           switchToApp(app);
         } else if (intent.getAction().equals(HotkeySetupActivity.INTENT_HOTKEYS_CHANGED)) {
           loadHotkeys();

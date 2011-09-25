@@ -40,7 +40,7 @@ public class HotkeySetupActivity extends Activity {
   public static final String INTENT_HOTKEYS_CHANGED = "org.cicadasong.cicada.HOTKEYS_CHANGED";
   
   public static final AppDescription NONE =
-      new AppDescription("NONE", "NONE", "(None)", AppType.NONE);
+      new AppDescription("NONE", "NONE", null, "(None)", AppType.NONE);
   
   public static final int MIDDLE_LEFT_BUTTON = 0;
   public static final int MIDDLE_RIGHT_BUTTON = 1;

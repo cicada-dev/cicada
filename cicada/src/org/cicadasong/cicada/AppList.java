@@ -35,6 +35,7 @@ public class AppList extends CicadaApp {
   public static final AppDescription DESCRIPTION = new AppDescription(
     AppList.class.getPackage().getName(),
     AppList.class.getName(),
+    null,
     "App List",
     AppType.APP);
   
@@ -148,6 +149,7 @@ public class AppList extends CicadaApp {
     Intent intent = new Intent(CicadaService.INTENT_LAUNCH_APP);
     intent.putExtra(CicadaService.EXTRA_APP_PACKAGE, app.packageName);
     intent.putExtra(CicadaService.EXTRA_APP_CLASS, app.className);
+    intent.putExtra(CicadaService.EXTRA_APP_SETTINGS_CLASS, app.settingsActivityClassName);
     intent.putExtra(CicadaService.EXTRA_APP_NAME, app.appName);
     sendBroadcast(intent);
   }

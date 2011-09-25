@@ -25,12 +25,15 @@ import android.content.ComponentName;
 public class AppDescription {
   public final String packageName;
   public final String className;
+  public final String settingsActivityClassName;
   public final String appName;
   public final AppType modes;
 
-  public AppDescription(String packageName, String className, String appName, AppType modes) {
+  public AppDescription(String packageName, String className, String settingsActivityClassName,
+      String appName, AppType modes) {
     this.packageName = packageName;
     this.className = className;
+    this.settingsActivityClassName = settingsActivityClassName;
     this.appName = appName;
     this.modes = modes;
   }
@@ -64,7 +67,20 @@ public class AppDescription {
     AppDescription other = (AppDescription) o;
     
     return packageName.equals(other.packageName) && className.equals(other.className) &&
+        stringsEqual(settingsActivityClassName, other.settingsActivityClassName) &&
         appName.equals(other.appName) && modes.equals(other.modes);
+  }
+  
+  private boolean stringsEqual(String a, String b) {
+    if (a == null && b == null) {
+      return true;
+    }
+    
+    if (a == null || b == null) {
+      return false;
+    }
+    
+    return a.equals(b);
   }
 
   @Override
@@ -72,6 +88,7 @@ public class AppDescription {
     int hash = 1;
     hash += 31 * packageName.hashCode();
     hash += 31 * className.hashCode();
+    hash += 31 * (settingsActivityClassName != null ? settingsActivityClassName.hashCode() : 0);
     hash += 31 * appName.hashCode();
     hash += 31 * modes.hashCode();
     return hash;

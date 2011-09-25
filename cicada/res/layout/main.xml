@@ -29,4 +29,17 @@
     android:textOn="@string/service_running_toggle_label"
     android:textOff="@string/service_stopped_toggle_label"
     />
+  <FrameLayout
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:padding="15dp"
+    >
+    <Button
+      android:id="@+id/active_app_settings"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center"
+      />
+  </FrameLayout>
 </LinearLayout>

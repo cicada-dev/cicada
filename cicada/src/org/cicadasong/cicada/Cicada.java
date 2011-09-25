@@ -19,6 +19,7 @@ import org.cicadasong.apollo.SimulatedDisplayView;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -27,6 +28,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.Toast;
@@ -37,6 +41,7 @@ public class Cicada extends Activity {
     
   private BroadcastReceiver receiver;
   private ToggleButton serviceToggle;
+  private Button appSettingsButton;
   SimulatedDisplayView display;
   
   /** Called when the activity is first created. */
@@ -60,6 +65,21 @@ public class Cicada extends Activity {
         }
       }
     });
+    
+    appSettingsButton = (Button) findViewById(R.id.active_app_settings);
+    appSettingsButton.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        if (CicadaService.getActiveApp() != null &&
+                CicadaService.getActiveApp().settingsActivityClassName != null) {
+          AppDescription app = CicadaService.getActiveApp();
+          Intent intent = new Intent();
+          intent.setComponent(new ComponentName(app.packageName, app.settingsActivityClassName));
+          startActivity(intent);
+        }
+      }
+    });
+    
     updateServiceToggleState();
     
     if (!CicadaService.isRunning()) {
@@ -99,8 +119,20 @@ public class Cicada extends Activity {
     serviceToggle.setChecked(CicadaService.isRunning());
   }
   
+  private void updateAppSettingsButton() {
+    if (CicadaService.getActiveApp() != null &&
+        CicadaService.getActiveApp().settingsActivityClassName != null) {
+      appSettingsButton.setVisibility(View.VISIBLE);
+      appSettingsButton.setText(
+          String.format(getString(R.string.settings_button_text), CicadaService.getActiveApp()));
+    } else {
+      appSettingsButton.setVisibility(View.GONE);
+    }
+  }
+  
   private void restoreUIState() {
     updateServiceToggleState();
+    updateAppSettingsButton();
     if (CicadaService.isRunning() && CicadaService.getLastScreenBuffer() != null) {
       display.setByteBuffer(CicadaService.getLastScreenBuffer());
     } else {
@@ -120,6 +152,7 @@ public class Cicada extends Activity {
       public void onReceive(Context context, Intent intent) {
         Log.v(Cicada.TAG, "Received intent: " + intent);
         
+        updateAppSettingsButton();
         if (intent.getAction().equals(ApolloIntents.INTENT_PUSH_BITMAP)) {
           display.setByteBuffer(intent.getByteArrayExtra(ApolloIntents.EXTRA_BITMAP_BUFFER));
         } else if (intent.getAction().equals(ApolloIntents.INTENT_PUSH_TEXT)) {
@@ -154,27 +187,13 @@ public class Cicada extends Activity {
   public boolean onOptionsItemSelected(MenuItem item) {
     // Handle item selection
     switch (item.getItemId()) {
-    
-    case R.id.menu_item_widget_setup:
-      launchWidgetSetup();
-      return true;
-
-    case R.id.menu_item_hotkey_setup:
-      launchHotkeySetup();
-      return true;
-
-    case R.id.menu_item_settings:
-      launchSettings();
-      return true;
-
-    default:
-      return super.onOptionsItemSelected(item);
-    }
-  }
+      case R.id.menu_item_settings:
+        launchSettings();
+        return true;
   
-  private void launchWidgetSetup() {
-    Intent intent = new Intent(this, WidgetSetup.class);
-    startActivity(intent);
+      default:
+        return super.onOptionsItemSelected(item);
+    }
   }
   
   private void launchHotkeySetup() {

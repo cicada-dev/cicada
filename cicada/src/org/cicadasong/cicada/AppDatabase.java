@@ -92,8 +92,8 @@ public class AppDatabase {
     if (cursor.moveToFirst()) {
       do {
         AppType type = AppType.values()[cursor.getInt(3)];
-        AppDescription app =
-            new AppDescription(cursor.getString(0), cursor.getString(1), cursor.getString(2), type);
+        AppDescription app = new AppDescription(
+            cursor.getString(0), cursor.getString(1), null, cursor.getString(2), type);
         apps.add(app);
       } while (cursor.moveToNext());
     }
@@ -120,8 +120,8 @@ public class AppDatabase {
     if (cursor.moveToFirst()) {
       do {
         AppType type = AppType.values()[cursor.getInt(3)];
-        AppDescription app =
-            new AppDescription(cursor.getString(0), cursor.getString(1), cursor.getString(2), type);
+        AppDescription app = new AppDescription(
+            cursor.getString(0), cursor.getString(1), null, cursor.getString(2), type);
         widgets.set(cursor.getInt(4), app);
       } while (cursor.moveToNext());
     }
@@ -165,8 +165,8 @@ public class AppDatabase {
     if (cursor.moveToFirst()) {
       do {
         AppType type = AppType.values()[cursor.getInt(3)];
-        AppDescription app =
-            new AppDescription(cursor.getString(0), cursor.getString(1), cursor.getString(2), type);
+        AppDescription app = new AppDescription(
+            cursor.getString(0), cursor.getString(1), null, cursor.getString(2), type);
         entries.add(new HotkeySetupEntry(app, (byte) cursor.getInt(4)));
       } while (cursor.moveToNext());
     }
