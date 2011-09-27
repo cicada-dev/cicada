@@ -98,7 +98,15 @@ public class DeviceService extends Service {
   
   private void connectToDevice() {
     BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-    BluetoothDevice device = adapter.getRemoteDevice(PrefUtil.getWatchMAC(this));
+    BluetoothDevice device;
+    String mac = PrefUtil.getWatchMAC(this);
+    try {
+      device = adapter.getRemoteDevice(mac);
+    } catch (IllegalArgumentException e) {
+      // TODO: Bad MAC address, tell the user
+      Log.v(TAG, "MAC address not valid: " + mac);
+      return;
+    }
     try {
       socket = device.createRfcommSocketToServiceRecord(SPP_UUID);
       socket.connect();
