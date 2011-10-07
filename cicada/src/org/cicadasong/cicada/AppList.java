@@ -159,7 +159,6 @@ public class AppList extends CicadaApp {
   }
   
   private int lastStartIndex = -1;
-  private int lastSelectedRow = -1;
   private final int listSize = 7;
   
   protected void onDraw(Canvas canvas) {
@@ -178,44 +177,18 @@ public class AppList extends CicadaApp {
     	startIndex = 0;			// If we're off the top then fix it
     }
     
-    // The block below was designed so that instead of repainting the whole screen 
-    // we would just repaint the two lines that had changed.
-    // Unfortunately that didn't work because the other lines all went blank
-    // if (startIndex == lastStartIndex) {
-    if (false) {
-    	// If the start indexes are the same then the screen content won't change
-    	// So there's no need to repaint the whole screen we just need to move the highlight
-    	// Turn off the previous highlight
-    	y = -paint.ascent() + (lastSelectedRow - 1) * paint.getFontSpacing();
-    	paint.setColor(Color.WHITE);
-    	canvas.drawRect(new Rect(0,
-                (int)(y + paint.ascent()), canvas.getWidth(), (int)(y + paint.descent() + 1)), paint);
-    	paint.setColor(Color.BLACK);
-        canvas.drawText(apps.get(startIndex + lastSelectedRow -1).appName, LEFT_MARGIN, y, paint);
-    	// Turn on the new highlight
-    	lastSelectedRow = selectedIndex - startIndex + 1;
-    	y = -paint.ascent() + (lastSelectedRow - 1) * paint.getFontSpacing();
-    	paint.setColor(Color.BLACK);
-    	canvas.drawRect(new Rect(0,
-                (int)(y + paint.ascent()), canvas.getWidth(), (int)(y + paint.descent() + 1)), paint);
-    	paint.setColor(Color.WHITE);
-        canvas.drawText(apps.get(startIndex + lastSelectedRow -1).appName, LEFT_MARGIN, y, paint);
-    }
-    else {
-    	lastStartIndex = startIndex;
+    lastStartIndex = startIndex;
     	 
     	for (int i = startIndex; (i < apps.size()) && (i < startIndex + 7); i++) {
     		if (i == selectedIndex) {
     			paint.setColor(Color.BLACK);
     			canvas.drawRect(new Rect(0,
     					(int)(y + paint.ascent()), canvas.getWidth(), (int)(y + paint.descent() + 1)), paint);
-    			lastSelectedRow = selectedIndex - startIndex + 1;
     		}
     		paint.setColor(i == selectedIndex ? Color.WHITE : Color.BLACK);
     		canvas.drawText(apps.get(i).appName, LEFT_MARGIN, y, paint);
     		y += paint.getFontSpacing();
     	}
-    }
   }
 
 }
