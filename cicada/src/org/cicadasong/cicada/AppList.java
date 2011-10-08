@@ -138,8 +138,12 @@ public class AppList extends CicadaApp {
   
   private void changeSelection(int newIndex) {
     selectedIndex = newIndex;
-    selectedIndex = Math.min(apps.size() - 1, selectedIndex);
-    selectedIndex = Math.max(0, selectedIndex);
+    // Wrap around across top or bottom
+    if (selectedIndex < 0) {
+    	selectedIndex = apps.size() - 1;
+    } else if (selectedIndex >= apps.size()) {
+    	selectedIndex = 0;
+    }
     invalidate();
   }
   
@@ -154,20 +158,37 @@ public class AppList extends CicadaApp {
     sendBroadcast(intent);
   }
   
+  private int lastStartIndex = -1;
+  private final int listSize = 7;
+  
   protected void onDraw(Canvas canvas) {
     float y = -paint.ascent();
 
-    int startIndex = Math.max(0, selectedIndex - 2);
-    for (int i = startIndex; (i < apps.size()) && (i < startIndex + 7); i++) {
-      if (i == selectedIndex) {
-        paint.setColor(Color.BLACK);
-        canvas.drawRect(new Rect(0,
-            (int)(y + paint.ascent()), canvas.getWidth(), (int)(y + paint.descent() + 1)), paint);
-      }
-      paint.setColor(i == selectedIndex ? Color.WHITE : Color.BLACK);
-      canvas.drawText(apps.get(i).appName, LEFT_MARGIN, y, paint);
-      y += paint.getFontSpacing();
+    int startIndex = 0;
+    if (selectedIndex < lastStartIndex) {
+    	startIndex = selectedIndex - (int)(listSize/2); // Put our item in the centre of the list if scrolling upwards
+    } else if (selectedIndex > (lastStartIndex + listSize -1)) {
+    		startIndex = selectedIndex - (int)(listSize/2); 	// Put our item in the centre of the list if scrolling downwards
     }
+    if ((startIndex + listSize) >= apps.size()) {
+    	startIndex = apps.size() - listSize;		// If there would be blank lines then adjust so that doesn't happen if we can
+    }
+    if (startIndex < 0) {
+    	startIndex = 0;			// If we're off the top then fix it
+    }
+    
+    lastStartIndex = startIndex;
+    	 
+    	for (int i = startIndex; (i < apps.size()) && (i < startIndex + 7); i++) {
+    		if (i == selectedIndex) {
+    			paint.setColor(Color.BLACK);
+    			canvas.drawRect(new Rect(0,
+    					(int)(y + paint.ascent()), canvas.getWidth(), (int)(y + paint.descent() + 1)), paint);
+    		}
+    		paint.setColor(i == selectedIndex ? Color.WHITE : Color.BLACK);
+    		canvas.drawText(apps.get(i).appName, LEFT_MARGIN, y, paint);
+    		y += paint.getFontSpacing();
+    	}
   }
 
 }
