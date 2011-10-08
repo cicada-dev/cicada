@@ -31,4 +31,13 @@ public class CicadaIntents {
   public static final String EXTRA_VIBRATE_ON_MSEC = "on";
   public static final String EXTRA_VIBRATE_OFF_MSEC = "off";
   public static final String EXTRA_VIBRATE_NUM_CYCLES = "cycles";
+  
+  public static final String INTENT_START_NOTIFICATION = PACKAGE_PREFIX + "START_NOTIFICATION";
+  public static final String EXTRA_NOTIFICATION_ID = "notification_id";  // int
+  public static final String EXTRA_NOTIFICATION_BODY = "notification_body";  // string
+  public static final String EXTRA_NOTIFICATION_BODY_RECT = "notification_body_rect";  // int[]
+  public static final String EXTRA_PACKAGE_NAME = "package_name";  // string
+  public static final String EXTRA_CLASS_NAME = "class_name";  // string
+  
+  public static final String INTENT_STOP_NOTIFICATION = PACKAGE_PREFIX + "STOP_NOTIFICATION";
 }

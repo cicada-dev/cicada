@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">Cicada Notification Demo</string>
+
+  <string name="basic_text_header">Basic Text Notification</string>
+  <string name="basic_text_default">This is a simple text notification</string>
+  <string name="send_notification_button_label">Send Notification</string>
+</resources>

@@ -24,6 +24,7 @@ import org.cicadasong.cicada.MetaWatchConnection.Mode;
 import org.cicadasong.cicadalib.CicadaApp;
 import org.cicadasong.cicadalib.CicadaApp.AppType;
 import org.cicadasong.cicadalib.CicadaIntents;
+import org.cicadasong.cicadalib.CicadaNotification;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -84,6 +85,8 @@ public class CicadaService extends Service {
     IntentFilter filter = new IntentFilter();
     filter.addAction(CicadaIntents.INTENT_PUSH_CANVAS);
     filter.addAction(CicadaIntents.INTENT_VIBRATE);
+    filter.addAction(CicadaIntents.INTENT_START_NOTIFICATION);
+    filter.addAction(CicadaIntents.INTENT_STOP_NOTIFICATION);
     filter.addAction(ApolloIntents.INTENT_BUTTON_PRESS);
     filter.addAction(HotkeySetupActivity.INTENT_HOTKEYS_CHANGED);
     filter.addAction(WidgetSetup.INTENT_WIDGETS_CHANGED);
@@ -186,6 +189,10 @@ public class CicadaService extends Service {
             deactivateWidgets();
             activateWidgets();
           }
+        } else if (intent.getAction().equals(CicadaIntents.INTENT_START_NOTIFICATION)) {
+          handleStartNotification(intent.getExtras());
+        } else if (intent.getAction().equals(CicadaIntents.INTENT_STOP_NOTIFICATION)) {
+          handleStopNotification(intent.getExtras());
         }
       }
     };
@@ -275,6 +282,18 @@ public class CicadaService extends Service {
         activeConnection.sendButtonEvent(buttons);
       }
     }
+  }
+  
+  private void handleStartNotification(Bundle params) {
+    CicadaNotification note = CicadaNotification.createFromBundle(params);
+    Log.v(TAG, "Got start notification from " +
+        note.getPackageName() + "/" + note.getClassName() + ": " + note.getText());
+  }
+  
+  private void handleStopNotification(Bundle params) {
+    CicadaNotification note = CicadaNotification.createFromBundle(params);
+    Log.v(TAG, "Got start notification from " +
+        note.getPackageName() + "/" + note.getClassName() + ": " + note.getText());
   }
 
   @Override

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="vertical"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  >
+  <TextView  
+    android:layout_width="match_parent" 
+    android:layout_height="wrap_content" 
+    android:text="@string/basic_text_header"
+    android:padding="10dp"
+    />
+  <EditText
+    android:id="@+id/basic_text_field"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:text="@string/basic_text_default"
+    />
+  <Button
+    android:id="@+id/basic_text_button"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:text="@string/send_notification_button_label"
+    android:paddingBottom="10dp"
+    />
+</LinearLayout>
