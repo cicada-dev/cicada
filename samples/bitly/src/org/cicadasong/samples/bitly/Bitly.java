@@ -48,7 +48,7 @@ public class Bitly extends CicadaApp {
   @Override
   public void onCreate() {
     createFontPainters();
-    logo = BitmapFactory.decodeResource(getResources(), R.drawable.bitly);
+    logo = BitmapFactory.decodeStream(getResources().openRawResource(R.drawable.bitly));
   
     super.onCreate();
   }

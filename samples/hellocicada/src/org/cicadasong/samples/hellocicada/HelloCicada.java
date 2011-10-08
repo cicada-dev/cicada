@@ -39,7 +39,8 @@ public class HelloCicada extends BroadcastReceiver {
       return;  // Not yours!
     }
     
-    Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.cicada);
+    Bitmap bitmap =
+        BitmapFactory.decodeStream(context.getResources().openRawResource(R.drawable.cicada));
     ApolloIntents.pushBitmap(context, bitmap);
     ApolloIntents.vibrate(context, 500, 200, 3);
   }
