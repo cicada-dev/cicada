@@ -20,6 +20,7 @@ import java.util.Map;
 import org.cicadasong.apollo.ApolloConfig;
 import org.cicadasong.apollo.ApolloIntents;
 import org.cicadasong.apollo.ApolloIntents.ButtonPress;
+import org.cicadasong.apollo.BitmapUtil;
 import org.cicadasong.cicada.MetaWatchConnection.Mode;
 import org.cicadasong.cicadalib.CicadaApp;
 import org.cicadasong.cicadalib.CicadaApp.AppType;
@@ -74,6 +75,8 @@ public class CicadaService extends Service {
   private DeviceServiceConnection deviceServiceConnection;
   private MetaWatchConnection.Listener connectionListener;
   private final Messenger appMessenger = new Messenger(new AppHandler());
+  
+  private NotificationRenderer notificationRenderer;
 
   @Override
   public IBinder onBind(Intent intent) {
@@ -96,6 +99,8 @@ public class CicadaService extends Service {
     registerReceiver(receiver, filter);
 
     loadHotkeys();
+
+    notificationRenderer = new NotificationRenderer(this);
     
     Log.v(Cicada.TAG, "Cicada Service Started");
     isRunning = true;
@@ -288,6 +293,16 @@ public class CicadaService extends Service {
     CicadaNotification note = CicadaNotification.createFromBundle(params);
     Log.v(TAG, "Got start notification from " +
         note.getPackageName() + "/" + note.getClassName() + ": " + note.getText());
+
+    byte[] notificationBuffer =
+        BitmapUtil.bitmapToBuffer(notificationRenderer.renderNotification(note));
+    if (USE_DEVICE_SERVICE && (deviceServiceConnection != null)) {
+      deviceServiceConnection.getService().updateScreen(
+          notificationBuffer, Mode.NOTIFICATION);
+      
+      // TODO: Get this info from the notification
+      deviceServiceConnection.getService().vibrate(500, 0, 1);
+    }
   }
   
   private void handleStopNotification(Bundle params) {

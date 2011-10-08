@@ -115,6 +115,14 @@ public class CicadaNotification {
   public String getText() {
     return body;
   }
+  
+  public byte[] getScreenBuffer() {
+    return screenBuffer;
+  }
+  
+  public Rect getBodyRect() {
+    return bodyRect;
+  }
 
   private static boolean isNonEmpty(String string) {
     return string != null && string.length() > 0;

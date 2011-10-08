@@ -259,7 +259,11 @@ public class MetaWatchConnection {
       }
     }
     
-    if (screenChanged) {
+    // TODO: Right now I'm special-casing the NOTIFICATION mode because we generally fall out of
+    //       it quickly.  The *correct* way to do this would be checking if the mode is not the
+    //       mode that the watch is in right now.  However, the state messages that we're getting
+    //       back from the watch don't seem to give us accurate mode information.
+    if (screenChanged || mode == Mode.NOTIFICATION) {
       updateDisplayToMode(mode);
     }
   }
