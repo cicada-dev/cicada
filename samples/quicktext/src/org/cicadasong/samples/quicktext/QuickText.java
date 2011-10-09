@@ -14,7 +14,9 @@
 
 package org.cicadasong.samples.quicktext;
 
+import org.cicadasong.apollo.ApolloConfig;
 import org.cicadasong.cicadalib.CicadaApp;
+import org.cicadasong.cicadalib.TextBlock;
 
 import android.app.Activity;
 import android.app.PendingIntent;
@@ -25,6 +27,8 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Paint.FontMetricsInt;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.telephony.SmsManager;
 
@@ -43,6 +47,9 @@ public class QuickText extends CicadaApp {
   private String number = "";
   private String message = "";
   
+  private TextBlock toBlock;
+  private TextBlock messageBlock;
+  
   private enum State {
     NEED_CONFIGURATION,
     READY_TO_SEND,
@@ -58,7 +65,12 @@ public class QuickText extends CicadaApp {
   @Override
   protected void onResume() {
     registerIntentHandler();
+    init();
+  }
+
+  private void init() {
     loadSetup();
+    initTextBlocks();
     backToReady();
   }
 
@@ -97,8 +109,7 @@ public class QuickText extends CicadaApp {
     setupUpdateIntentReceiver = new BroadcastReceiver() {
       @Override
       public void onReceive(Context context, Intent intent) {
-        loadSetup();
-        backToReady();
+        init();
       }
     };
     registerReceiver(setupUpdateIntentReceiver, new IntentFilter(ACTION_SETUP_UPDATE));
@@ -145,6 +156,27 @@ public class QuickText extends CicadaApp {
     message = prefs.getString(QuickText.PREF_MESSAGE, "");
   }
   
+  private void initTextBlocks() {
+    Paint paint = new Paint();
+    paint.setTypeface(Typeface.DEFAULT);
+    paint.setTextSize(12);
+    FontMetricsInt fm = paint.getFontMetricsInt();
+    
+    Rect mainRect = new Rect(0, 0, ApolloConfig.DISPLAY_WIDTH, ApolloConfig.DISPLAY_HEIGHT);
+    mainRect.inset(2, 2);  // 2 pixel margin from edge of screen
+    
+    toBlock = new TextBlock("To: " + name, mainRect, paint);
+    toBlock.setMaxLines(1);
+    
+    // This bit is a little hacky, until I implement alignment and thus can use a TextBlock
+    // for the bottom text.
+    int messageBottom = mainRect.bottom - 2 + fm.ascent;
+    int messageTop = toBlock.getRenderedArea().bottom + fm.leading;
+
+    Rect messageRect = new Rect(mainRect.left, messageTop, mainRect.right, messageBottom);
+    messageBlock = new TextBlock("Message:\n" + message, messageRect, paint);
+  }
+  
   private void backToReady() {
     if (name.length() > 0 && number.length() > 0 && message.length() > 0) {
       state = State.READY_TO_SEND;
@@ -155,26 +187,17 @@ public class QuickText extends CicadaApp {
   }
   
   protected void onDraw(Canvas canvas) {
+    toBlock.drawTo(canvas);
+    messageBlock.drawTo(canvas);
+    
     Paint paint = new Paint();
     paint.setTypeface(Typeface.DEFAULT);
     paint.setTextSize(12);
-    
-    paint.setTextAlign(Paint.Align.LEFT);
-    int y = 2;
-    int x = 2;
-    
-    canvas.drawText("To: " + name, x, y + -paint.ascent(), paint);
-    y += -paint.ascent() + paint.descent();
-    
-    canvas.drawText("Message:", x, y + -paint.ascent(), paint);
-    y += -paint.ascent() + paint.descent();
-    
-    canvas.drawText(message, x, y + -paint.ascent(), paint);
-    
+
     // Roughly align with the lower right button
     paint.setTextAlign(Paint.Align.RIGHT);
-    y = canvas.getHeight() - 4;
-    x = canvas.getWidth() - 2;
+    int y = canvas.getHeight() - 4;
+    int x = canvas.getWidth() - 2;
     
     if (state == State.READY_TO_SEND) {
       canvas.drawText("SEND SMS >>", x, y, paint);
