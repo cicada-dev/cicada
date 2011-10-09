@@ -28,7 +28,6 @@ import android.util.Log;
 /**
  * This class makes it easier to render nice-looking text into a Canvas.
  * 
- * TODO: Add proper word-wrapping
  * TODO: Add ellipsizing
  * TODO: Add proper support for vertical and horizontal alignment
  * TODO: Add lazy recalculation?
@@ -96,12 +95,19 @@ public class TextBlock {
         getRenderedHeight(renderLines.size() + 1) < rect.height()) {
       String line = lines.remove(0);
       
-      // TODO: Actually break on words
       int fittingChars = paint.breakText(line, true, rect.width(), null);
       if (fittingChars < line.length()) {
-        String extraLine = line.substring(fittingChars);
-        line = line.substring(0, fittingChars);
-        lines.add(0, extraLine);
+        String nextLine;
+        int breakPoint = fittingChars;
+        int spaceIndex = line.lastIndexOf(' ', fittingChars);
+        if (spaceIndex != -1) {
+          breakPoint = spaceIndex;
+          nextLine = line.substring(breakPoint + 1);  // skip space
+        } else {
+          nextLine = line.substring(fittingChars);
+        }
+        line = line.substring(0, breakPoint);
+        lines.add(0, nextLine);
       }
       renderLines.add(line);
       renderedWidth = (int) Math.max(renderedWidth, paint.measureText(line));
