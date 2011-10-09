@@ -76,6 +76,13 @@ public class StopWatch extends CicadaApp {
 				if (state != State.RUNNING) {
 					return;
 				}
+				
+				if (state == State.RUNNING) {
+					indicator = !indicator;
+				} else {
+					indicator = true;
+				}
+				
 				invalidate();
 				handler.postDelayed(this, DISPLAY_UPDATE_INTERVAL_MSEC);
 			}
@@ -140,12 +147,6 @@ public class StopWatch extends CicadaApp {
 
 	@Override
 	protected void onDraw(Canvas canvas) {
-		if (state == State.RUNNING) {
-			indicator = !indicator;
-		} else {
-			indicator = true;
-		}
-
 		int x = canvas.getWidth() / 2;
 		int y = (int) (canvas.getHeight() - paint.ascent()) / 2;
 
@@ -157,15 +158,11 @@ public class StopWatch extends CicadaApp {
 		}
 
 		long elapsedMillis = getElapsed();
-
-		// FIXME not very efficient calculation
 		short seconds = (short) (elapsedMillis / 1000);
 		short mins = (short) (seconds / 60);
 		short hours = (short) (mins / 60);
 
-		String readout = String.format("%d%c%02d%c%02d", hours, seperator, mins % 60,
-				seperator, seconds % 60);
-		canvas.drawText(readout, x, y,
-				paint);
+		String readout = String.format("%d%c%02d%c%02d", hours, seperator, mins % 60, seperator, seconds % 60);
+		canvas.drawText(readout, x, y, paint);
 	}
 }
