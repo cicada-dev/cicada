@@ -21,6 +21,7 @@ import java.util.List;
 import org.cicadasong.apollo.ApolloConfig;
 import org.cicadasong.apollo.BitmapUtil;
 import org.cicadasong.cicadalib.CicadaNotification;
+import org.cicadasong.cicadalib.TextBlock;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -88,23 +89,8 @@ public class NotificationRenderer {
     // TODO: Use fontSize and adjust font size to fit text?
     Paint textPaint = metawatch11px;
     
-    // Here we try to simulate the text-display behavior of the core Apollo app.
-    int x = bounds.left;
-    int y = bounds.top + (int) -textPaint.ascent() + 1;
-    List<String> lines = new LinkedList<String>(Arrays.asList(text.split("\n")));
-    while(lines.size() > 0) {
-      String line = lines.remove(0);
-      
-      int fittingChars = textPaint.breakText(line, true, bounds.width(), null);
-      if (fittingChars < line.length()) {
-        String extraLine = line.substring(fittingChars);
-        line = line.substring(0, fittingChars);
-        lines.add(0, extraLine);
-      }
-      
-      canvas.drawText(line, x, y, textPaint);
-      y += textPaint.getFontSpacing() - 1;
-    }
+    TextBlock bodyBlock = new TextBlock(text, bounds, textPaint);
+    bodyBlock.drawTo(canvas);
   }
 
 }
