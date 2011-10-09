@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="com.hydraproductions.cicada"
+      android:versionCode="1"
+      android:versionName="1.0">
+    <uses-sdk android:minSdkVersion="8" />
+
+    <application android:icon="@drawable/icon" android:label="@string/app_name">
+        <service android:name=".StopWatch"
+                 android:label="@string/app_name"
+                 android:exported="true">
+            <meta-data android:name="org.cicadasong.cicada.apptype"
+                       android:value="WIDGET_AND_APP" />
+        </service>
+    </application>
+</manifest>
