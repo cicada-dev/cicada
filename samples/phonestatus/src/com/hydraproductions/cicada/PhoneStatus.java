@@ -12,31 +12,40 @@ import android.telephony.TelephonyManager;
 import android.telephony.SignalStrength; // API Level 7+
 import android.util.Log;
 
+/**
+ * @See http://developer.android.com/reference/android/telephony/SignalStrength.html#getGsmSignalStrength%28%29
+ * @See 3GPP TS 27.007 v6.3.0 (2003-06) - Section 8.5 - Signal Quality +CSQ 
+ * @author Dominic Clifton <me@dominicclifton.name>
+ */
 public class PhoneStatus extends CicadaApp {
 
 	public static final String TAG = PhoneStatus.class.getSimpleName();
 
 	private Paint paint;
+	private TelephonyManager telephonyManager;
+	private StatusPhoneStateListener phoneStateListener;
+	float signalStrengthPercentage;
 
-	private TelephonyManager telephonyManager = null;
-	StatusPhoneStateListener phoneStateListener;
-	double signalStrengthPercentage = (double) 0;
-
-	protected double calculateSignalStrengthPercentage(SignalStrength signalStrength) {
-		
+	final static short GSM_STRENGTH_MIN = 0;
+	final static short GSM_STRENGTH_MAX = 31;
+	final static short GSM_STRENGTH_UNKNOWN = 99;
+	
+	protected float calculateSignalStrengthPercentage(SignalStrength signalStrength) {
 		// TODO add CDMA signal strength calculations
 		int gsmSignalStrength = signalStrength.getGsmSignalStrength();
 		Log.i(TAG, String.format("GSM Signal Strength: %d", gsmSignalStrength));
-		if (gsmSignalStrength == 99) {
+		if (gsmSignalStrength == GSM_STRENGTH_MAX) {
 			return 0;
 		}
-		return (gsmSignalStrength * 100) / 31;
+		return (float)(gsmSignalStrength * 100) / GSM_STRENGTH_UNKNOWN;
 	}
 	
 	protected void updateSignalStrength(SignalStrength signalStrength) {
 		signalStrengthPercentage = calculateSignalStrengthPercentage(signalStrength);
 		
-		if (!PhoneStatus.this.isActive()) return;
+		if (!PhoneStatus.this.isActive()) {
+			return;
+		}
 		invalidate();
 	}
 	
@@ -44,7 +53,6 @@ public class PhoneStatus extends CicadaApp {
 	private class StatusPhoneStateListener extends PhoneStateListener {
 		@Override
 		public void onSignalStrengthsChanged(SignalStrength signalStrength) {
-			super.onSignalStrengthsChanged(signalStrength);
 			updateSignalStrength(signalStrength);			
 		}
 	};
@@ -52,10 +60,8 @@ public class PhoneStatus extends CicadaApp {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		Log.i(TAG, "ON CREATE");
-		phoneStateListener   = new StatusPhoneStateListener();
+		phoneStateListener = new StatusPhoneStateListener();
 		telephonyManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-		telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);		
 	}
 
 	@Override
@@ -65,8 +71,6 @@ public class PhoneStatus extends CicadaApp {
 
 	@Override
 	protected void onResume() {
-
-		Log.i(TAG, "ON RESUME");
 		paint = new Paint();
 		paint.setTextAlign(Paint.Align.CENTER);
 		paint.setTypeface(Typeface.DEFAULT_BOLD);
@@ -80,13 +84,11 @@ public class PhoneStatus extends CicadaApp {
 
 	@Override
 	protected void onPause() {
-		Log.i(TAG, "ON PAUSE");
 		telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE);
 	}
 
 	@Override
 	protected void onDraw(Canvas canvas) {
-		Log.i(TAG, "ON DRAW");
 		int x = canvas.getWidth() / 2;
 		int y = (int) (canvas.getHeight() - paint.ascent()) / 2;
 		String readout = String.format("%3.2f%%", signalStrengthPercentage);
