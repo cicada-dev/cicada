@@ -1,4 +1,4 @@
-package com.hydraproductions.cicada;
+package com.hydraproductions.cicada.stopwatch;
 
 /**
  * Stopwatch example
