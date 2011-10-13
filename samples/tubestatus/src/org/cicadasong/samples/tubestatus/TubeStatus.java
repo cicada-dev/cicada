@@ -40,6 +40,9 @@ import android.util.Log;
  * An example app that fetches the current status of a particular London Underground line.
  * If this was a real app, it would also provide a phone-side setup screen to pick the train
  * lines to show.
+ * 
+ * It uses the tubeupdates.com site to get the information which currently scrapes information from TFL.
+ * Api documentation is here: http://tubeupdates.com/documentation/
  */
 public class TubeStatus extends CicadaApp {
   public static final String TAG = TubeStatus.class.getSimpleName();
