@@ -1,4 +1,4 @@
-package com.hydraproductions.cicada;
+package com.hydraproductions.cicada.phonestatus;
 
 import org.cicadasong.cicadalib.CicadaApp;
 
