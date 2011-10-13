@@ -23,11 +23,17 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.cicadasong.cicadalib.CicadaApp;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import android.text.TextUtils;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -54,12 +60,12 @@ public class TubeStatus extends CicadaApp {
     ALL("All lines", "all"),
     TUBE("Tube only", "tube"), // excludes DLR and Overground
     OVERGROUND("Overground", "overground"),
+    DLR("DLR", "docklands"),
 
     BAKERLOO("Bakerloo", "bakerloo"),
     CENTRAL("Central", "central"),
     CIRCLE("Circle", "circle"),
     DISTRICT("District", "district"),
-    DLR("DLR", "docklands"),
     HAMMERSMITH_AND_CITY("Hammersmith & City", "hammersmithcity"),
     JUBILEE("Jubilee", "jubilee"),
     METROPOLITAN("Metropolitan", "metropolitan"),
@@ -77,16 +83,20 @@ public class TubeStatus extends CicadaApp {
     }
   }
   
-  // wildcards followed by alphabetically ordered list
   private List<TubeLine> allLines = new ArrayList<TubeLine>(Arrays.asList(
+    // wildcards
     TubeLine.ALL,
     TubeLine.TUBE,
+    
+    // sprawling transport systems with seperate lines
     TubeLine.OVERGROUND,
+    TubeLine.DLR,
+    
+    // alphabetically ordered list of tube lines
     TubeLine.BAKERLOO,
     TubeLine.CENTRAL,
     TubeLine.CIRCLE,
     TubeLine.DISTRICT,
-    TubeLine.DLR,
     TubeLine.HAMMERSMITH_AND_CITY,
     TubeLine.JUBILEE,
     TubeLine.METROPOLITAN,
@@ -97,11 +107,30 @@ public class TubeStatus extends CicadaApp {
   ));
   
   private int selectionIndex;
-  private TubeLine selectedLine;
   private String status;
   private Runnable updateStatusTask;
   private Handler handler;
 
+  private static final String STATUS_GOOD = "good service";
+  private static final String STATUS_MINOR_DELAYS = "minor delays";
+  private static final String STATUS_SEVERE_DELAYS = "severe delays";
+  private static final String STATUS_PART_CLOSURE = "part closure";
+  private static final String STATUS_PART_SUSPENDED = "part suspended";
+  private static final String STATUS_SUSPENDED = "suspended";
+  private static final String STATUS_OTHER = "other"; // not returned via API, used only as map key
+    
+  private static final Map <String, String> messageToCodeMap = createMessageToCodeMap();
+  private static Map<String, String> createMessageToCodeMap() {
+    Map<String, String> result = new HashMap<String, String>();
+    result.put(STATUS_GOOD, "OK");
+    result.put(STATUS_MINOR_DELAYS, "MD");
+    result.put(STATUS_SEVERE_DELAYS, "SD");
+    result.put(STATUS_PART_CLOSURE, "PC");
+    result.put(STATUS_PART_SUSPENDED, "PS");
+    result.put(STATUS_SUSPENDED, "S");
+    return Collections.unmodifiableMap(result);
+  }
+  
   @Override
   public void onCreate() {
     updateSelection(0);
@@ -116,7 +145,6 @@ public class TubeStatus extends CicadaApp {
       index = 0;
     }
     selectionIndex = index;
-    selectedLine = allLines.get(selectionIndex);
   }
 
   @Override
@@ -170,6 +198,7 @@ public class TubeStatus extends CicadaApp {
       return;
     }
     if (handler != null) {
+      handler.removeCallbacks(updateStatusTask); // ensure that any fetch that is already in process doesn't deliver updates to the UI after this new fetch
       handler.post(updateStatusTask);
     }
     invalidate();
@@ -187,28 +216,18 @@ public class TubeStatus extends CicadaApp {
 
     paint.setTypeface(Typeface.DEFAULT);
     paint.setTextSize(11);
-    canvas.drawText(selectedLine.name, x, y - paint.descent() - 1, paint);
+    canvas.drawText(allLines.get(selectionIndex).name, x, y - paint.descent() - 1, paint);
 
-    paint.setTextSize(14);
+    paint.setTextSize(11); // TODO dynamically adjust font size depending on length of status string?
     canvas.drawText(status, x, y + (int)-paint.ascent() + 1, paint);
   }
-
+  
   private void processStatusUpdate(String newStatus) {
     if (!isActive()) {
       return;
     }
 
-    if (newStatus.equalsIgnoreCase("Good Service")) {
-      status = "Good Service";
-    } else if (newStatus.equalsIgnoreCase("Minor Delays")) {
-      status = "Minor Delays";
-    } else if (newStatus.equalsIgnoreCase("Part Closure")) {
-      status = "Part Closure";
-    } else if (newStatus.equalsIgnoreCase("Suspended")) {
-      status = "Suspended";
-    } else {
-      status = newStatus;
-    }
+    status = newStatus;
 
     invalidate();
 
@@ -221,12 +240,68 @@ public class TubeStatus extends CicadaApp {
     protected void onPostExecute(String result) {
       processStatusUpdate(result);
     }
+            
+    protected String determineOverallStatus(JSONObject responseObj) throws JSONException {
+      
+      Map<String, Integer> counterMap = new HashMap<String, Integer>();
+      counterMap.put(STATUS_GOOD, 0);
+      counterMap.put(STATUS_MINOR_DELAYS, 0);
+      counterMap.put(STATUS_SEVERE_DELAYS, 0);
+      counterMap.put(STATUS_PART_CLOSURE, 0);
+      counterMap.put(STATUS_PART_SUSPENDED, 0);
+      counterMap.put(STATUS_SUSPENDED, 0);
+      counterMap.put(STATUS_OTHER, 0);
+      
+      JSONArray lines = responseObj.getJSONObject("response").getJSONArray("lines");
+      for (int index = 0; index < lines.length() ; index++) {
+        JSONObject line = lines.getJSONObject(index);
+        Log.d(TAG, "Line: " + line.toString());
+        String status = line.getString("status");
+        
+        String[] statusMessages = status.split(",");
+        for (String statusMessage : statusMessages) {
+          if (messageToCodeMap.containsKey(statusMessage)) {
+            counterMap.put(statusMessage, counterMap.get(statusMessage) + 1);
+          } else {
+            counterMap.put(STATUS_OTHER, counterMap.get(STATUS_OTHER) + 1);
+          }
+        }
+      }
+      
+      ArrayList<String> codes = new ArrayList<String>();
+      
+      for (Map.Entry<String, Integer> entry : counterMap.entrySet()) {
+        if (entry.getValue() == 0) {
+          continue;
+        }
+        String codeAndCount = String.format("%s:%d", messageToCodeMap.get(entry.getKey()), entry.getValue());
+        codes.add(codeAndCount);
+      }
+      return TextUtils.join("/", codes);
+    }
+    
+    protected String determineSingleLineStatus(JSONObject responseObj) throws JSONException {
+      String status = responseObj.getJSONObject("response").getJSONArray("lines")
+          .getJSONObject(0).getString("status");
+      
+      String[] statusMessages = status.split(",");
+      ArrayList<String> codes = new ArrayList<String>();
+      for (String statusMessage : statusMessages) {
+        if (messageToCodeMap.containsKey(statusMessage)) {
+          codes.add(messageToCodeMap.get(statusMessage));
+        } else {
+          return "Unknown";
+        }
+      }
+      return TextUtils.join("/", codes);
+    }
+    
     @Override
     protected String doInBackground(Void... params) {
       String result = "Network Error";
       HttpURLConnection connection = null;
       try {
-        URL url = new URL(TUBE_STATUS_URL.replace("{lineIdentifier}", selectedLine.lineIdentifier));
+        URL url = new URL(TUBE_STATUS_URL.replace("{lineIdentifier}", allLines.get(selectionIndex).lineIdentifier));
         connection = (HttpURLConnection) url.openConnection();
         if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
           String response = convertStreamToString(connection.getInputStream());
@@ -245,8 +320,13 @@ public class TubeStatus extends CicadaApp {
             //     }]
             // }
             JSONObject responseObj = new JSONObject(response);
-            result = responseObj.getJSONObject("response").getJSONArray("lines")
-                .getJSONObject(0).getString("status");
+            
+            int lineCount = responseObj.getJSONObject("response").getJSONArray("lines").length();
+            if (lineCount > 1) {
+              result = determineOverallStatus(responseObj);
+            } else {
+              result = determineSingleLineStatus(responseObj);
+            }
           } catch (JSONException e) {
             Log.e(TAG, "Error decoding response: " + response);
           }
