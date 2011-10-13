@@ -21,6 +21,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.cicadasong.cicadalib.CicadaApp;
 import org.json.JSONException;
@@ -44,10 +47,74 @@ public class TubeStatus extends CicadaApp {
   // Update every 15 minutes so we don't barrage the server.
   public static final int STATUS_UPDATE_INTERVAL_MSEC = 15 * 60 * 1000;
 
-  private String line = "Victoria Line";
-  private String status = "Fetching...";
+  private enum TubeLine {
+    ALL("All lines", "all"),
+    TUBE("Tube only", "tube"), // excludes DLR and Overground
+    OVERGROUND("Overground", "overground"),
+
+    BAKERLOO("Bakerloo", "bakerloo"),
+    CENTRAL("Central", "central"),
+    CIRCLE("Circle", "circle"),
+    DISTRICT("District", "district"),
+    DLR("DLR", "docklands"),
+    HAMMERSMITH_AND_CITY("Hammersmith & City", "hammersmithcity"),
+    JUBILEE("Jubilee", "jubilee"),
+    METROPOLITAN("Metropolitan", "metropolitan"),
+    NORTHERN("Northern", "northern"),
+    PICCADILLY("Piccadilly", "piccadilly"),
+    VICTORIA("Victoria", "victoria"),
+    WATERLOO_AND_CITY("Waterloo & City", "waterloocity");
+
+    public String name;
+    public String lineIdentifier;
+
+    TubeLine(String name, String lineIdentifier) {
+      this.name = name;
+      this.lineIdentifier = lineIdentifier;
+    }
+  }
+  
+  // wildcards followed by alphabetically ordered list
+  private List<TubeLine> allLines = new ArrayList<TubeLine>(Arrays.asList(
+    TubeLine.ALL,
+    TubeLine.TUBE,
+    TubeLine.OVERGROUND,
+    TubeLine.BAKERLOO,
+    TubeLine.CENTRAL,
+    TubeLine.CIRCLE,
+    TubeLine.DISTRICT,
+    TubeLine.DLR,
+    TubeLine.HAMMERSMITH_AND_CITY,
+    TubeLine.JUBILEE,
+    TubeLine.METROPOLITAN,
+    TubeLine.NORTHERN,
+    TubeLine.PICCADILLY,
+    TubeLine.VICTORIA,
+    TubeLine.WATERLOO_AND_CITY
+  ));
+  
+  private int selectionIndex;
+  private TubeLine selectedLine;
+  private String status;
   private Runnable updateStatusTask;
   private Handler handler;
+
+  @Override
+  public void onCreate() {
+    updateSelection(0);
+    refreshStatus();
+  }
+  
+  private void updateSelection(int index) {
+    if (index < 0) {
+      index = allLines.size() - 1;
+    }
+    if (index >= allLines.size()) {
+      index = 0;
+    }
+    selectionIndex = index;
+    selectedLine = allLines.get(selectionIndex);
+  }
 
   @Override
   protected void onResume() {
@@ -78,8 +145,33 @@ public class TubeStatus extends CicadaApp {
 
   @Override
   protected void onButtonPress(WatchButton button) {
+		switch (button) {
+			case TOP_RIGHT:
+				updateSelection(selectionIndex - 1);
+				refreshStatus();
+				break;
+			case MIDDLE_RIGHT:
+				handler.post(updateStatusTask);
+				refreshStatus();
+				break;
+			case BOTTOM_RIGHT:
+				updateSelection(selectionIndex + 1);
+				refreshStatus();
+				break;
+		}
   }
 
+  protected void refreshStatus() {
+    status = "Fetching...";
+    if (!isActive()) {
+      return;
+    }
+    if (handler != null) {
+      handler.post(updateStatusTask);
+    }
+    invalidate();
+  }
+  
   protected void onDraw(Canvas canvas) {
     Paint paint = new Paint();
     paint.setTextAlign(Paint.Align.CENTER);
@@ -92,7 +184,7 @@ public class TubeStatus extends CicadaApp {
 
     paint.setTypeface(Typeface.DEFAULT);
     paint.setTextSize(11);
-    canvas.drawText(line, x, y - paint.descent() - 1, paint);
+    canvas.drawText(selectedLine.name, x, y - paint.descent() - 1, paint);
 
     paint.setTextSize(14);
     canvas.drawText(status, x, y + (int)-paint.ascent() + 1, paint);
@@ -122,7 +214,7 @@ public class TubeStatus extends CicadaApp {
 
   private class GetStatusTask extends AsyncTask<Void, Void, String> {
     private static final String TUBE_STATUS_URL =
-        "http://api.tubeupdates.com/?method=get.status&lines=victoria&return=status";
+        "http://api.tubeupdates.com/?method=get.status&lines={lineIdentifier}&return=status";
     protected void onPostExecute(String result) {
       processStatusUpdate(result);
     }
@@ -131,7 +223,7 @@ public class TubeStatus extends CicadaApp {
       String result = "Network Error";
       HttpURLConnection connection = null;
       try {
-        URL url = new URL(TUBE_STATUS_URL);
+        URL url = new URL(TUBE_STATUS_URL.replace("{lineIdentifier}", selectedLine.lineIdentifier));
         connection = (HttpURLConnection) url.openConnection();
         if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
           String response = convertStreamToString(connection.getInputStream());
