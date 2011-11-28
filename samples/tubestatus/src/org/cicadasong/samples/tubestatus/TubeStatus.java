@@ -35,6 +35,8 @@ import org.json.JSONObject;
 
 import android.text.TextUtils;
 
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Typeface;
@@ -50,13 +52,10 @@ import android.util.Log;
  * It uses the tubeupdates.com site to get the information which currently scrapes information from TFL.
  * Api documentation is here: http://tubeupdates.com/documentation/
  */
-public class TubeStatus extends CicadaApp {
+public class TubeStatus extends CicadaApp implements OnSharedPreferenceChangeListener {
   public static final String TAG = TubeStatus.class.getSimpleName();
 
-  // Update every 15 minutes so we don't barrage the server.
-  public static final int STATUS_UPDATE_INTERVAL_MSEC = 15 * 60 * 1000;
-
-  private enum TubeLine {
+  protected enum TubeLine {
     ALL("All lines", "all"),
     TUBE("Tube only", "tube"), // excludes DLR and Overground
     OVERGROUND("Overground", "overground"),
@@ -81,36 +80,47 @@ public class TubeStatus extends CicadaApp {
       this.name = name;
       this.lineIdentifier = lineIdentifier;
     }
+
+    protected static List<TubeLine> allLines = new ArrayList<TubeLine>(Arrays.asList(
+      // wildcards
+      TubeLine.ALL,
+      TubeLine.TUBE,
+      
+      // sprawling transport systems with seperate lines
+      TubeLine.OVERGROUND,
+      TubeLine.DLR,
+      
+      // alphabetically ordered list of tube lines
+      TubeLine.BAKERLOO,
+      TubeLine.CENTRAL,
+      TubeLine.CIRCLE,
+      TubeLine.DISTRICT,
+      TubeLine.HAMMERSMITH_AND_CITY,
+      TubeLine.JUBILEE,
+      TubeLine.METROPOLITAN,
+      TubeLine.NORTHERN,
+      TubeLine.PICCADILLY,
+      TubeLine.VICTORIA,
+      TubeLine.WATERLOO_AND_CITY
+    ));
+    
+    public static int indexOf(String lineIdentifier) {
+      for (int index = 0; index < allLines.size(); index++) {
+        if (allLines.get(index).lineIdentifier.compareToIgnoreCase(lineIdentifier) == 0) {
+          return index;
+        }
+      }
+      return -1;
+    }
   }
   
-  private List<TubeLine> allLines = new ArrayList<TubeLine>(Arrays.asList(
-    // wildcards
-    TubeLine.ALL,
-    TubeLine.TUBE,
-    
-    // sprawling transport systems with seperate lines
-    TubeLine.OVERGROUND,
-    TubeLine.DLR,
-    
-    // alphabetically ordered list of tube lines
-    TubeLine.BAKERLOO,
-    TubeLine.CENTRAL,
-    TubeLine.CIRCLE,
-    TubeLine.DISTRICT,
-    TubeLine.HAMMERSMITH_AND_CITY,
-    TubeLine.JUBILEE,
-    TubeLine.METROPOLITAN,
-    TubeLine.NORTHERN,
-    TubeLine.PICCADILLY,
-    TubeLine.VICTORIA,
-    TubeLine.WATERLOO_AND_CITY
-  ));
   
   private int selectionIndex;
   private String status;
   private Runnable updateStatusTask;
   private Handler handler;
-
+  private int updateIntervalMsec;
+  
   private static final String STATUS_GOOD = "good service";
   private static final String STATUS_MINOR_DELAYS = "minor delays";
   private static final String STATUS_SEVERE_DELAYS = "severe delays";
@@ -133,15 +143,22 @@ public class TubeStatus extends CicadaApp {
   
   @Override
   public void onCreate() {
-    updateSelection(0);
+    Preferences.getSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
+    readPreferences();
     refreshStatus();
+  }
+  
+  private void readPreferences() {
+    Log.v(TAG, "Reading preferences");
+    updateSelection(TubeLine.indexOf(Preferences.getPreferredLine(this)));
+    updateIntervalMsec = Preferences.getUpdateFrequency(this) * 60 * 1000;
   }
   
   private void updateSelection(int index) {
     if (index < 0) {
-      index = allLines.size() - 1;
+      index = TubeLine.allLines.size() - 1;
     }
-    if (index >= allLines.size()) {
+    if (index >= TubeLine.allLines.size()) {
       index = 0;
     }
     selectionIndex = index;
@@ -171,6 +188,7 @@ public class TubeStatus extends CicadaApp {
 
   @Override
   protected void onPause() {
+    Preferences.getSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
     handler.removeCallbacks(updateStatusTask);
   }
 
@@ -216,7 +234,7 @@ public class TubeStatus extends CicadaApp {
 
     paint.setTypeface(Typeface.DEFAULT);
     paint.setTextSize(11);
-    canvas.drawText(allLines.get(selectionIndex).name, x, y - paint.descent() - 1, paint);
+    canvas.drawText(TubeLine.allLines.get(selectionIndex).name, x, y - paint.descent() - 1, paint);
 
     paint.setTextSize(11); // TODO dynamically adjust font size depending on length of status string?
     canvas.drawText(status, x, y + (int)-paint.ascent() + 1, paint);
@@ -231,7 +249,7 @@ public class TubeStatus extends CicadaApp {
 
     invalidate();
 
-    handler.postDelayed(updateStatusTask, STATUS_UPDATE_INTERVAL_MSEC);
+    handler.postDelayed(updateStatusTask, updateIntervalMsec);
   }
 
   private class GetStatusTask extends AsyncTask<Void, Void, String> {
@@ -301,7 +319,7 @@ public class TubeStatus extends CicadaApp {
       String result = "Network Error";
       HttpURLConnection connection = null;
       try {
-        URL url = new URL(TUBE_STATUS_URL.replace("{lineIdentifier}", allLines.get(selectionIndex).lineIdentifier));
+        URL url = new URL(TUBE_STATUS_URL.replace("{lineIdentifier}", TubeLine.allLines.get(selectionIndex).lineIdentifier));
         connection = (HttpURLConnection) url.openConnection();
         if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
           String response = convertStreamToString(connection.getInputStream());
@@ -371,5 +389,13 @@ public class TubeStatus extends CicadaApp {
     }
 
     return sb.toString();
+  }
+
+  @Override
+  public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
+      String key) {
+    readPreferences();
+    handler.removeCallbacks(updateStatusTask);
+    handler.post(updateStatusTask);
   }
 }
