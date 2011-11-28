@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+  <ListPreference
+    android:key="PreferredLine"
+    android:title="Preferred Line"
+    android:defaultValue="@string/preferred_line"
+    />
+   
+  <EditTextPreference
+    android:key="UpdateFrequency"
+    android:title="Update Frequency (minutes)"
+    android:defaultValue="@string/update_frequency"
+    />
+</PreferenceScreen>
