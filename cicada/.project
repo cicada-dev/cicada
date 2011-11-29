@@ -30,16 +30,4 @@
 		<nature>com.android.ide.eclipse.adt.AndroidNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>ApolloLib_src</name>
-			<type>2</type>
-			<locationURI>_android_ApolloLib_c6286f16/src</locationURI>
-		</link>
-		<link>
-			<name>CicadaLib_src</name>
-			<type>2</type>
-			<locationURI>_android_CicadaLib_8981e3e4/src</locationURI>
-		</link>
-	</linkedResources>
 </projectDescription>
