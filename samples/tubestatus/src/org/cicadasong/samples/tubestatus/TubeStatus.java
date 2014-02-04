@@ -124,6 +124,7 @@ public class TubeStatus extends CicadaApp implements OnSharedPreferenceChangeLis
   private static final String STATUS_GOOD = "good service";
   private static final String STATUS_MINOR_DELAYS = "minor delays";
   private static final String STATUS_SEVERE_DELAYS = "severe delays";
+  private static final String STATUS_PLANNED_CLOSURE = "planned closure";
   private static final String STATUS_PART_CLOSURE = "part closure";
   private static final String STATUS_PART_SUSPENDED = "part suspended";
   private static final String STATUS_SUSPENDED = "suspended";
@@ -135,9 +136,11 @@ public class TubeStatus extends CicadaApp implements OnSharedPreferenceChangeLis
     result.put(STATUS_GOOD, "OK");
     result.put(STATUS_MINOR_DELAYS, "MD");
     result.put(STATUS_SEVERE_DELAYS, "SD");
+    result.put(STATUS_PLANNED_CLOSURE, "PLC");
     result.put(STATUS_PART_CLOSURE, "PC");
     result.put(STATUS_PART_SUSPENDED, "PS");
     result.put(STATUS_SUSPENDED, "S");
+    result.put(STATUS_OTHER, "?");
     return Collections.unmodifiableMap(result);
   }
   
@@ -265,6 +268,7 @@ public class TubeStatus extends CicadaApp implements OnSharedPreferenceChangeLis
       counterMap.put(STATUS_GOOD, 0);
       counterMap.put(STATUS_MINOR_DELAYS, 0);
       counterMap.put(STATUS_SEVERE_DELAYS, 0);
+      counterMap.put(STATUS_PLANNED_CLOSURE, 0);
       counterMap.put(STATUS_PART_CLOSURE, 0);
       counterMap.put(STATUS_PART_SUSPENDED, 0);
       counterMap.put(STATUS_SUSPENDED, 0);
@@ -323,6 +327,7 @@ public class TubeStatus extends CicadaApp implements OnSharedPreferenceChangeLis
         connection = (HttpURLConnection) url.openConnection();
         if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
           String response = convertStreamToString(connection.getInputStream());
+          Log.d(TAG, response);
           try {
             // Expected response format is something like:
             // {
